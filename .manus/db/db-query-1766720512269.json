@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, userId, clientName, date, createdAt FROM evaluations ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4JgxjaGaSRfm3Kk.root --database iizYGo6wBDkwLpAoFWDNA7 --execute SELECT id, userId, clientName, date, createdAt FROM evaluations ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "60004",
+      "userId": "1",
+      "clientName": "測試客戶",
+      "date": "",
+      "createdAt": "2025-12-26 03:39:25"
+    },
+    {
+      "id": "60003",
+      "userId": "300001",
+      "clientName": "",
+      "date": "2025-12-26",
+      "createdAt": "2025-12-26 03:36:16"
+    },
+    {
+      "id": "60002",
+      "userId": "300001",
+      "clientName": "吳展宏",
+      "date": "2025-12-26",
+      "createdAt": "2025-12-26 03:30:31"
+    },
+    {
+      "id": "60001",
+      "userId": "300001",
+      "clientName": "L",
+      "date": "2025-12-26",
+      "createdAt": "2025-12-26 03:27:59"
+    },
+    {
+      "id": "30001",
+      "userId": "1",
+      "clientName": "測試客戶",
+      "date": "",
+      "createdAt": "2025-12-24 10:15:53"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tclientName\tdate\tcreatedAt\n60004\t1\t測試客戶\t\t2025-12-26 03:39:25\n60003\t300001\t\t2025-12-26\t2025-12-26 03:36:16\n60002\t300001\t吳展宏\t2025-12-26\t2025-12-26 03:30:31\n60001\t300001\tL\t2025-12-26\t2025-12-26 03:27:59\n30001\t1\t測試客戶\t\t2025-12-24 10:15:53\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}
