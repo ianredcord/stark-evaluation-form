@@ -1,7 +1,10 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, UNAUTHED_ERR_MSG } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
+import type { TrpcContext } from "./_core/context";
+import type { User } from "../drizzle/schema";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   createEvaluation,
@@ -14,10 +17,39 @@ import {
   getTemplatesByUserId,
   updateTemplate,
   deleteTemplate,
+  upsertUser,
+  getUserByOpenId,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { generateEvaluationPDF } from "./pdfGenerator";
+
+// Dev-mode auth bypass: NODE_ENV === "development" AND OAUTH_SERVER_URL 未設定時,
+// 自動 upsert OWNER_OPEN_ID 對應的本地 admin 使用者並回傳。其餘環境一律走 ctx.user。
+async function devAuth(ctx: TrpcContext): Promise<User | null> {
+  if (ctx.user) return ctx.user;
+  if (process.env.NODE_ENV !== "development") return null;
+  if (process.env.OAUTH_SERVER_URL) return null;
+  const openId = process.env.OWNER_OPEN_ID || "local-user";
+  await upsertUser({
+    openId,
+    name: "Local Dev",
+    email: "dev@local.test",
+    loginMethod: "dev-bypass",
+    role: "admin",
+  });
+  return (await getUserByOpenId(openId)) ?? null;
+}
+
+// 專案層的 protectedProcedure 替代品。不動 _core/trpc.ts 裡的原版,
+// 只在本檔案內取代使用。production 行為等價於原 protectedProcedure。
+const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const user = await devAuth(ctx);
+  if (!user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  return next({ ctx: { ...ctx, user } });
+});
 
 // 評估表資料驗證 Schema
 const evaluationInputSchema = z.object({
@@ -50,7 +82,7 @@ const evaluationInputSchema = z.object({
   
   motiPhysioPage1: z.string().optional(),
   motiPhysioPage2: z.string().optional(),
-  
+
   functionalMovement: z.any().optional(),
   redcordAssessment: z.any().optional(),
   
@@ -68,7 +100,7 @@ const evaluationInputSchema = z.object({
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(({ ctx }) => devAuth(ctx)),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
