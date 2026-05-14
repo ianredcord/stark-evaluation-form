@@ -3,6 +3,7 @@ import {
   EvaluationFormData,
   BasicInfo,
   MotiPhysioReport,
+  MotiRiskValues,
   FunctionalMovement,
   RedcordAssessment,
   RonficAssessment,
@@ -24,6 +25,7 @@ interface EvaluationFormContextType {
   // 資料更新
   updateBasicInfo: (data: Partial<BasicInfo>) => void;
   updateMotiPhysio: (data: Partial<MotiPhysioReport>) => void;
+  updateMotiRiskValues: (data: Partial<MotiRiskValues>) => void;
   updateFunctionalMovement: (data: Partial<FunctionalMovement>) => void;
   updateRedcord: (data: Partial<RedcordAssessment>) => void;
   updateRonfic: (data: Partial<RonficAssessment>) => void;
@@ -69,6 +71,13 @@ export function EvaluationFormProvider({ children }: { children: ReactNode }) {
     setFormData((prev) => ({
       ...prev,
       motiPhysio: { ...prev.motiPhysio, ...data },
+    }));
+  }, []);
+
+  const updateMotiRiskValues = useCallback((data: Partial<MotiRiskValues>) => {
+    setFormData((prev) => ({
+      ...prev,
+      motiRiskValues: { ...prev.motiRiskValues, ...data },
     }));
   }, []);
 
@@ -122,6 +131,7 @@ export function EvaluationFormProvider({ children }: { children: ReactNode }) {
         markPageCompleted,
         updateBasicInfo,
         updateMotiPhysio,
+        updateMotiRiskValues,
         updateFunctionalMovement,
         updateRedcord,
         updateRonfic,

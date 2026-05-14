@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { defaultMotiRiskValues } from "../../../shared/evaluation";
 
 
 
@@ -94,6 +95,7 @@ function EvaluationFormContent() {
           reportPage1: existingEvaluation.motiPhysioPage1 || "",
           reportPage2: existingEvaluation.motiPhysioPage2 || "",
         },
+        motiRiskValues: (existingEvaluation.motiRiskValues as any) || defaultMotiRiskValues,
         functionalMovement: (existingEvaluation.functionalMovement as any) || {},
         redcord: (existingEvaluation.redcordAssessment as any) || {},
         ronfic: {
@@ -186,7 +188,9 @@ function EvaluationFormContent() {
       
       motiPhysioPage1: formData.motiPhysio.reportPage1,
       motiPhysioPage2: formData.motiPhysio.reportPage2,
-      
+
+      motiRiskValues: formData.motiRiskValues,
+
       functionalMovement: formData.functionalMovement,
       redcordAssessment: formData.redcord,
       
@@ -284,6 +288,7 @@ function EvaluationFormContent() {
         goals: formData.basicInfo.goalsAndExpectations,
         motiPhysioPage1: formData.motiPhysio.reportPage1,
         motiPhysioPage2: formData.motiPhysio.reportPage2,
+        motiRiskValues: formData.motiRiskValues,
         functionalMovement: formData.functionalMovement,
         redcordAssessment: formData.redcord,
         ronficMiniplusResult: formData.ronfic.miniplusResult,

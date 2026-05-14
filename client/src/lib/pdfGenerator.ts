@@ -1,5 +1,75 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import {
+  MOTI_THRESHOLDS,
+  MOTI_LEVEL_LABEL,
+  MotiRiskKey,
+  MotiRiskValues,
+} from "../../../shared/evaluation";
+
+function renderMotiRiskSection(motiRiskValues: MotiRiskValues | undefined | null): string {
+  if (!motiRiskValues) return "";
+
+  const keys = Object.keys(MOTI_THRESHOLDS) as MotiRiskKey[];
+  const allItemsEmpty = keys.every((k) => {
+    const item = motiRiskValues[k];
+    return !item || item.value === null || item.value === undefined;
+  });
+  const overall = motiRiskValues.overallRiskIndex;
+  const overallEmpty = overall === null || overall === undefined;
+
+  if (allItemsEmpty && overallEmpty) return "";
+
+  const rows = keys
+    .map((key) => {
+      const def = MOTI_THRESHOLDS[key];
+      const item = motiRiskValues[key];
+      const value = item?.value;
+      const levelKey = item?.level;
+      const levelLabel =
+        levelKey === "maintain" || levelKey === "warn" || levelKey === "danger"
+          ? MOTI_LEVEL_LABEL[levelKey]
+          : "";
+      return `
+        <tr>
+          <td style="padding: 6px 10px; border: 1px solid #D35400;">${def.name}</td>
+          <td style="padding: 6px 10px; border: 1px solid #D35400; text-align: center;">${
+            value === null || value === undefined ? "" : `${value}${def.unit}`
+          }</td>
+          <td style="padding: 6px 10px; border: 1px solid #D35400; text-align: center;">${levelLabel}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <div style="margin-top: 20px;">
+      ${
+        !overallEmpty
+          ? `
+        <div style="background: white; border: 2px solid #D35400; border-radius: 12px; padding: 12px 20px; margin-bottom: 12px; display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="color: #D35400; font-weight: 600; font-size: 12pt;">整體失衡風險指數</span>
+          <span style="font-size: 24pt; font-weight: 700; color: #333;">${overall}<span style="font-size: 12pt; color: #888; font-weight: 400;"> / 100</span></span>
+        </div>
+      `
+          : ""
+      }
+      <div style="background: #FEE8D6; border: 2px solid #D35400; border-radius: 15px; padding: 6px 15px; margin-bottom: 8px; text-align: center;">
+        <span style="color: #D35400; font-weight: 600; font-size: 11pt;">Moti 12 項風險數值</span>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt; background: white;">
+        <thead>
+          <tr>
+            <th style="background: #FEE8D6; border: 1px solid #D35400; padding: 8px; font-weight: 600;">項目</th>
+            <th style="background: #FEE8D6; border: 1px solid #D35400; padding: 8px; font-weight: 600; width: 100px;">數值</th>
+            <th style="background: #FEE8D6; border: 1px solid #D35400; padding: 8px; font-weight: 600; width: 100px;">失衡等級</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
 
 /**
  * 前端 PDF 生成器
@@ -478,8 +548,10 @@ export function generatePDFHTML(evaluation: any): string {
     <div class="image-section">
       ${evaluation.motiPhysioPage2 ? `<img src="${evaluation.motiPhysioPage2}" alt="姿勢檢測報告第二頁" />` : '<span style="color: #999;">報告第二頁（未上傳）</span>'}
     </div>
+
+    ${renderMotiRiskSection(evaluation.motiRiskValues)}
   </div>
-  
+
   <!-- 第 3 頁：功能性動作檢測（上半身 + 下半身/核心 合併） -->
   <div class="page">
     <div class="header">

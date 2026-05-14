@@ -40,6 +40,63 @@ export interface MotiPhysioReport {
   reportPage2: string; // 圖片 URL
 }
 
+// Moti 12 項風險數值單項
+export interface MotiRiskItem {
+  value: number | null;
+  level: "" | "maintain" | "warn" | "danger";
+}
+
+// 12 項閾值定義
+// 邏輯：value < t[0] → maintain；t[0] ≤ value < t[1] → warn；value ≥ t[1] → danger
+export const MOTI_THRESHOLDS = {
+  hkaRight:         { name: "[右] HKA-角度", unit: "°", thresholds: [2, 4] },
+  hkaLeft:          { name: "[左] HKA-角度", unit: "°", thresholds: [2, 4] },
+  shoulderDiff:     { name: "肩膀高度差",    unit: "°", thresholds: [1, 3] },
+  roundShoulder:    { name: "圓肩",          unit: "°", thresholds: [12, 19] },
+  lumbarLordosis:   { name: "腰椎前凸",      unit: "°", thresholds: [40, 44] },
+  thoracicKyphosis: { name: "胸椎後凸",      unit: "°", thresholds: [41, 47] },
+  scoliosis:        { name: "脊椎側彎",      unit: "°", thresholds: [8, 17] },
+  kneeFlexion:      { name: "膝關節屈曲",    unit: "°", thresholds: [4, 7] },
+  pelvisRotation:   { name: "骨盆旋轉",      unit: "°", thresholds: [1, 3] },
+  pelvisTilt:       { name: "骨盆傾斜",      unit: "°", thresholds: [1, 2] },
+  pelvisAnterior:   { name: "骨盆前傾",      unit: "°", thresholds: [3, 5] },
+  headPosture:      { name: "頭部姿勢",      unit: "°", thresholds: [17, 23] },
+} as const;
+
+export type MotiRiskKey = keyof typeof MOTI_THRESHOLDS;
+
+export interface MotiRiskValues {
+  hkaRight: MotiRiskItem;
+  hkaLeft: MotiRiskItem;
+  shoulderDiff: MotiRiskItem;
+  roundShoulder: MotiRiskItem;
+  lumbarLordosis: MotiRiskItem;
+  thoracicKyphosis: MotiRiskItem;
+  scoliosis: MotiRiskItem;
+  kneeFlexion: MotiRiskItem;
+  pelvisRotation: MotiRiskItem;
+  pelvisTilt: MotiRiskItem;
+  pelvisAnterior: MotiRiskItem;
+  headPosture: MotiRiskItem;
+  overallRiskIndex: number | null;
+}
+
+export function calculateMotiLevel(
+  value: number | null,
+  thresholds: readonly [number, number]
+): "" | "maintain" | "warn" | "danger" {
+  if (value === null || isNaN(value)) return "";
+  if (value < thresholds[0]) return "maintain";
+  if (value < thresholds[1]) return "warn";
+  return "danger";
+}
+
+export const MOTI_LEVEL_LABEL: Record<"maintain" | "warn" | "danger", string> = {
+  maintain: "維持",
+  warn: "警惕",
+  danger: "危險",
+};
+
 // 功能性動作檢測項目
 export interface FunctionalMovementItem {
   performance: string; // 表現/疼痛
@@ -170,6 +227,7 @@ export interface EvaluationFormData {
   id?: number;
   basicInfo: BasicInfo;
   motiPhysio: MotiPhysioReport;
+  motiRiskValues: MotiRiskValues;
   functionalMovement: FunctionalMovement;
   redcord: RedcordAssessment;
   ronfic: RonficAssessment;
@@ -239,6 +297,24 @@ export const defaultMotiPhysioReport: MotiPhysioReport = {
   reportPage2: "",
 };
 
+export const defaultMotiRiskItem: MotiRiskItem = { value: null, level: "" };
+
+export const defaultMotiRiskValues: MotiRiskValues = {
+  hkaRight: { ...defaultMotiRiskItem },
+  hkaLeft: { ...defaultMotiRiskItem },
+  shoulderDiff: { ...defaultMotiRiskItem },
+  roundShoulder: { ...defaultMotiRiskItem },
+  lumbarLordosis: { ...defaultMotiRiskItem },
+  thoracicKyphosis: { ...defaultMotiRiskItem },
+  scoliosis: { ...defaultMotiRiskItem },
+  kneeFlexion: { ...defaultMotiRiskItem },
+  pelvisRotation: { ...defaultMotiRiskItem },
+  pelvisTilt: { ...defaultMotiRiskItem },
+  pelvisAnterior: { ...defaultMotiRiskItem },
+  headPosture: { ...defaultMotiRiskItem },
+  overallRiskIndex: null,
+};
+
 export const defaultFunctionalMovement: FunctionalMovement = {
   neckFlexion: { ...defaultFunctionalMovementItem },
   neckExtension: { ...defaultFunctionalMovementItem },
@@ -306,6 +382,7 @@ export const defaultTrainingPlan: TrainingPlan = {
 export const defaultEvaluationFormData: EvaluationFormData = {
   basicInfo: defaultBasicInfo,
   motiPhysio: defaultMotiPhysioReport,
+  motiRiskValues: defaultMotiRiskValues,
   functionalMovement: defaultFunctionalMovement,
   redcord: defaultRedcordAssessment,
   ronfic: defaultRonficAssessment,

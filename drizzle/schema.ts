@@ -62,6 +62,9 @@ export const evaluations = mysqlTable("evaluations", {
   // Moti Physio 報告（圖片 URL）
   motiPhysioPage1: text("motiPhysioPage1"),
   motiPhysioPage2: text("motiPhysioPage2"),
+
+  // Moti 12 項風險數值（JSON 格式儲存）
+  motiRiskValues: json("motiRiskValues"),
   
   // 功能性動作檢測（JSON 格式儲存）
   functionalMovement: json("functionalMovement"),

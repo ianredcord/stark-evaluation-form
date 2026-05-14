@@ -83,6 +83,8 @@ const evaluationInputSchema = z.object({
   motiPhysioPage1: z.string().optional(),
   motiPhysioPage2: z.string().optional(),
 
+  motiRiskValues: z.any().optional(),
+
   functionalMovement: z.any().optional(),
   redcordAssessment: z.any().optional(),
   
