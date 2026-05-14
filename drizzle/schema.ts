@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, longtext, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -59,9 +59,9 @@ export const evaluations = mysqlTable("evaluations", {
   sleepCondition: text("sleepCondition"),
   goalsAndExpectations: text("goalsAndExpectations"),
   
-  // Moti Physio 報告（圖片 URL）
-  motiPhysioPage1: text("motiPhysioPage1"),
-  motiPhysioPage2: text("motiPhysioPage2"),
+  // Moti Physio 報告（圖片:目前為 base64 data URL,longtext 容納 ~13MB)
+  motiPhysioPage1: longtext("motiPhysioPage1"),
+  motiPhysioPage2: longtext("motiPhysioPage2"),
 
   // Moti 12 項風險數值（JSON 格式儲存）
   motiRiskValues: json("motiRiskValues"),
@@ -72,9 +72,9 @@ export const evaluations = mysqlTable("evaluations", {
   // 紅繩動力鍊檢測（JSON 格式儲存）
   redcordAssessment: json("redcordAssessment"),
   
-  // RONFIC 評估結果（圖片 URL）
-  ronficMiniplusResult: text("ronficMiniplusResult"),
-  ronficXimResult: text("ronficXimResult"),
+  // RONFIC 評估結果（圖片:目前為 base64 data URL,longtext 容納 ~13MB)
+  ronficMiniplusResult: longtext("ronficMiniplusResult"),
+  ronficXimResult: longtext("ronficXimResult"),
   
   // 訓練計畫（JSON 格式儲存）
   trainingPlans: json("trainingPlans"),
@@ -83,9 +83,9 @@ export const evaluations = mysqlTable("evaluations", {
   // 評估照片（JSON 陣列儲存圖片 URL）
   photos: json("photos"),
   
-  // 簽名（Data URL 或 S3 URL）
-  clientSignature: text("clientSignature"),
-  coachSignature: text("coachSignature"),
+  // 簽名（Data URL 或 S3 URL;SignaturePad 產生的 base64 通常 500KB+,需 longtext)
+  clientSignature: longtext("clientSignature"),
+  coachSignature: longtext("coachSignature"),
   
   // 時間戳記
   createdAt: timestamp("createdAt").defaultNow().notNull(),
