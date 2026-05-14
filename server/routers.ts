@@ -24,12 +24,19 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { generateEvaluationPDF } from "./pdfGenerator";
 
-// Dev-mode auth bypass: NODE_ENV === "development" AND OAUTH_SERVER_URL 未設定時,
-// 自動 upsert OWNER_OPEN_ID 對應的本地 admin 使用者並回傳。其餘環境一律走 ctx.user。
+// Auth bypass:
+// - autoBypass: NODE_ENV === "development" AND OAUTH_SERVER_URL 未設定(保留 Hotfix 1 行為)
+// - explicitBypass: ENABLE_DEV_AUTH_BYPASS === "true"(臨時開關,Week 3 接 OAuth 後移除)
 async function devAuth(ctx: TrpcContext): Promise<User | null> {
   if (ctx.user) return ctx.user;
-  if (process.env.NODE_ENV !== "development") return null;
-  if (process.env.OAUTH_SERVER_URL) return null;
+
+  const explicitBypass = process.env.ENABLE_DEV_AUTH_BYPASS === "true";
+  const autoBypass =
+    process.env.NODE_ENV === "development" &&
+    !process.env.OAUTH_SERVER_URL;
+
+  if (!explicitBypass && !autoBypass) return null;
+
   const openId = process.env.OWNER_OPEN_ID || "local-user";
   await upsertUser({
     openId,
