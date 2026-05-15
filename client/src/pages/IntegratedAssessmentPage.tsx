@@ -12,6 +12,7 @@ import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard"
 import { SectionNumber } from "@/components/atoms/SectionNumber";
 import { EvaluationDrawer, type DrawerTabKey } from "@/components/organisms/EvaluationDrawer";
 import { PrescriptionPicker } from "@/components/organisms/PrescriptionPicker";
+import { GenerateReportDialog } from "@/components/organisms/GenerateReportDialog";
 import {
   DEFAULT_DEMO_PRESCRIPTIONS,
   getPrescription,
@@ -106,6 +107,7 @@ export default function IntegratedAssessmentPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTabKey>("basic");
   const [prescriptionPickerOpen, setPrescriptionPickerOpen] = useState(false);
+  const [generateReportOpen, setGenerateReportOpen] = useState(false);
   const [prescriptions, setPrescriptions] = useState<PrescriptionSelection[]>([
     ...DEFAULT_DEMO_PRESCRIPTIONS,
   ]);
@@ -491,9 +493,7 @@ export default function IntegratedAssessmentPage() {
           lastUpdatedAt={demoReportSummary.lastUpdatedAt}
           onSaveDraft={() => alert("儲存草稿 — Week 4 接 tRPC")}
           onAssignPlan={() => setPrescriptionPickerOpen(true)}
-          onGenerateReport={() =>
-            alert("產生客戶報告 — Week 3 shareCode 才生效")
-          }
+          onGenerateReport={() => setGenerateReportOpen(true)}
           onRefreshPreview={() => alert("Refresh — 預覽即時更新")}
         />
         </div>
@@ -510,6 +510,16 @@ export default function IntegratedAssessmentPage() {
         onOpenChange={setPrescriptionPickerOpen}
         selected={prescriptions}
         onConfirm={setPrescriptions}
+      />
+
+      <GenerateReportDialog
+        open={generateReportOpen}
+        onOpenChange={setGenerateReportOpen}
+        clientName={demoClient.name}
+        evaluationDate="2026/05/13"
+        scoreSummary={`${demoReportSummary.riskLevel.score} / 100 · ${demoReportSummary.riskLevel.label}`}
+        topIssuesCount={topIssues.length}
+        prescriptionsCount={prescriptions.length}
       />
     </TherapistLayout>
   );
