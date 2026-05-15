@@ -225,6 +225,19 @@
 - [x] 更新測試 mock（`getEvaluationsForClinic`、user.clinicId）
 - [ ] 實機驗收 — 兩位使用者設同 clinicId 應互看評估，不同則隔離
 
+## PDF 補完第 8 頁處方建議
+- [x] `client/src/lib/pdfGenerator.ts` 加 `renderPrescriptionSection` helper
+- [x] PDF 模板加入第 8 頁（處方建議）— 4 欄選中項目 + 治療師備註
+- [x] EvaluationForm 匯出 PDF 時帶上 prescriptions 欄位
+- [x] 條件性渲染：無勾選時不產生第 8 頁
+
+## 治療師體驗增強
+- [x] EvaluationForm header 加「預覽報告」按鈕（產生 shareCode 並開新分頁）
+
+## 測試補完
+- [x] 新增 `server/report.test.ts`：7 個測試（getByShareCode 過濾欄位、view count、shareCode 驗證、generateShareLink 冪等與權限）
+- [x] 全套測試 27/27 通過
+
 ## SaaS Week 2：客戶端線上互動報告（Task 05-08）
 - [x] Task 05：`drizzle/schema.ts` 加 `shareCode/sharedAt/viewCount` 欄 + migration 0006
 - [x] Task 05：`server/db.ts` 加 `getEvaluationByShareCode/setShareCode/incrementViewCount`

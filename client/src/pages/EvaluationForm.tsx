@@ -11,7 +11,7 @@ import { Page6Ronfic } from "@/components/pages/Page6Ronfic";
 import { Page7TrainingPlan } from "@/components/pages/Page7TrainingPlan";
 import { Page8Prescription } from "@/components/pages/Page8Prescription";
 import { DateInput } from "@/components/FormFields";
-import { FileDown, Save, Loader2, LayoutTemplate, Share2 } from "lucide-react";
+import { FileDown, Save, Loader2, LayoutTemplate, Share2, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -250,22 +250,37 @@ function EvaluationFormContent() {
     }
   };
 
-  const handleCopyShareLink = async () => {
+  const ensureShareUrl = async (): Promise<string | null> => {
     if (!evaluationId) {
       toast.error("請先儲存評估表");
-      return;
+      return null;
     }
+    const result = await shareLinkMutation.mutateAsync({ id: evaluationId });
+    if (!result.success || !("shareCode" in result)) {
+      toast.error(("error" in result && result.error) || "建立失敗");
+      return null;
+    }
+    return `${window.location.origin}/report/${result.shareCode}`;
+  };
+
+  const handleCopyShareLink = async () => {
     try {
-      const result = await shareLinkMutation.mutateAsync({ id: evaluationId });
-      if (!result.success || !("shareCode" in result)) {
-        toast.error(("error" in result && result.error) || "建立失敗");
-        return;
-      }
-      const url = `${window.location.origin}/report/${result.shareCode}`;
+      const url = await ensureShareUrl();
+      if (!url) return;
       await navigator.clipboard.writeText(url);
       toast.success("已複製客戶分享連結");
     } catch {
       toast.error("複製失敗");
+    }
+  };
+
+  const handlePreviewReport = async () => {
+    try {
+      const url = await ensureShareUrl();
+      if (!url) return;
+      window.open(url, "_blank", "noopener");
+    } catch {
+      toast.error("預覽失敗");
     }
   };
 
@@ -322,6 +337,7 @@ function EvaluationFormContent() {
         photos: formData.trainingPlan.photos,
         clientSignature: formData.trainingPlan.clientSignature,
         coachSignature: formData.trainingPlan.coachSignature,
+        prescriptions: formData.prescriptions,
       };
       
       // 動態導入 PDF 生成工具
@@ -454,6 +470,15 @@ function EvaluationFormContent() {
                   </div>
                 </DialogContent>
               </Dialog>
+              <button
+                onClick={handlePreviewReport}
+                disabled={!evaluationId || shareLinkMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-stark-border bg-white text-stark-text hover:bg-stark-bg transition-colors disabled:opacity-50"
+                title="開新分頁預覽客戶端報告"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">預覽報告</span>
+              </button>
               <button
                 onClick={handleCopyShareLink}
                 disabled={!evaluationId || shareLinkMutation.isPending}

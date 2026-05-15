@@ -5,7 +5,109 @@ import {
   MOTI_LEVEL_LABEL,
   MotiRiskKey,
   MotiRiskValues,
+  PrescriptionSelection,
 } from "../../../shared/evaluation";
+import {
+  getPrescriptionFor,
+  PRESCRIPTION_CATEGORY_LABEL,
+  PrescriptionCategory,
+  PrescriptionItem,
+} from "../../../shared/prescriptionKB";
+
+function renderPrescriptionSection(
+  prescriptions: PrescriptionSelection[] | undefined | null,
+): string {
+  if (!prescriptions || prescriptions.length === 0) return "";
+
+  // 過濾出有實際勾選任何項目的處方
+  const active = prescriptions.filter(
+    (p) =>
+      p.selectedFasciaIds.length > 0 ||
+      p.selectedAcupointIds.length > 0 ||
+      p.selectedExerciseIds.length > 0 ||
+      p.selectedDeviceIds.length > 0 ||
+      (p.customNotes && p.customNotes.trim() !== ""),
+  );
+  if (active.length === 0) return "";
+
+  const categoryColor: Record<PrescriptionCategory, string> = {
+    fascia: "#D35400",
+    acupoint: "#7E22CE",
+    exercise: "#0F766E",
+    device: "#1F2937",
+  };
+
+  const renderColumn = (
+    cat: PrescriptionCategory,
+    ids: string[],
+    items: PrescriptionItem[],
+  ): string => {
+    const color = categoryColor[cat];
+    const label = PRESCRIPTION_CATEGORY_LABEL[cat];
+    const selected = ids
+      .map((id) => items.find((x) => x.id === id))
+      .filter((x): x is PrescriptionItem => Boolean(x));
+    if (selected.length === 0) {
+      return `
+        <div style="border: 1px solid #E8D5C4; border-radius: 8px; padding: 8px; background: #FAFAFA;">
+          <div style="font-weight: 600; color: ${color}; font-size: 9pt; margin-bottom: 4px;">${label}</div>
+          <div style="font-size: 8pt; color: #999;">未勾選</div>
+        </div>
+      `;
+    }
+    return `
+      <div style="border: 1px solid #E8D5C4; border-radius: 8px; padding: 8px; background: white;">
+        <div style="font-weight: 600; color: ${color}; font-size: 9pt; margin-bottom: 6px;">${label}</div>
+        ${selected
+          .map(
+            (item) => `
+              <div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dotted #E8D5C4;">
+                <div style="font-weight: 500; font-size: 9pt; color: #333;">${item.title}${
+                  item.duration
+                    ? ` <span style="font-weight: 400; color: ${color}; font-size: 8pt;">(${item.duration})</span>`
+                    : ""
+                }</div>
+                <div style="font-size: 8pt; color: #666; margin-top: 2px; line-height: 1.4;">${item.description}</div>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    `;
+  };
+
+  const blocks = active
+    .map((p) => {
+      const meta = MOTI_THRESHOLDS[p.riskItemKey];
+      const kb = getPrescriptionFor(p.riskItemKey, p.level);
+      const levelLabel = MOTI_LEVEL_LABEL[p.level];
+      const levelColor = p.level === "danger" ? "#DC2626" : "#D97706";
+      return `
+        <div style="background: white; border: 2px solid #E8D5C4; border-radius: 12px; margin-bottom: 12px; overflow: hidden;">
+          <div style="background: #FEF9F3; padding: 8px 12px; border-bottom: 1px solid #E8D5C4; display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: ${levelColor}; color: white; font-size: 8pt; font-weight: 600;">${levelLabel}</span>
+            <span style="font-weight: 600; font-size: 10pt; color: #333;">${meta.name}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px;">
+            ${kb ? renderColumn("fascia", p.selectedFasciaIds, kb.fascia) : ""}
+            ${kb ? renderColumn("acupoint", p.selectedAcupointIds, kb.acupoint) : ""}
+            ${kb ? renderColumn("exercise", p.selectedExerciseIds, kb.exercise) : ""}
+            ${kb ? renderColumn("device", p.selectedDeviceIds, kb.device) : ""}
+          </div>
+          ${
+            p.customNotes && p.customNotes.trim()
+              ? `<div style="background: #FFF8E1; border-top: 1px solid #E8D5C4; padding: 6px 12px; font-size: 8pt; color: #555;">
+                  <strong style="color: #B45309;">治療師備註:</strong> ${p.customNotes}
+                </div>`
+              : ""
+          }
+        </div>
+      `;
+    })
+    .join("");
+
+  return blocks;
+}
 
 function renderMotiRiskSection(motiRiskValues: MotiRiskValues | undefined | null): string {
   if (!motiRiskValues) return "";
@@ -1390,14 +1492,43 @@ export function generatePDFHTML(evaluation: any): string {
       <div style="flex: 1; background: white; border: 2px solid #E8D5C4; border-radius: 12px; padding: 15px;">
         <div style="font-weight: 500; color: #333; margin-bottom: 10px;">教練簽名</div>
         <div style="background: #FEF9F3; border: 1px solid #E8D5C4; border-radius: 8px; height: 100px; display: flex; align-items: center; justify-content: center;">
-          ${evaluation.coachSignature ? 
-            `<img src="${evaluation.coachSignature}" alt="教練簽名" style="max-width: 100%; max-height: 90px; object-fit: contain;" />` : 
+          ${evaluation.coachSignature ?
+            `<img src="${evaluation.coachSignature}" alt="教練簽名" style="max-width: 100%; max-height: 90px; object-fit: contain;" />` :
             '<span style="color: #999;">請在此簽名</span>'
           }
         </div>
       </div>
     </div>
   </div>
+
+  ${
+    renderPrescriptionSection(evaluation.prescriptions)
+      ? `
+  <!-- ===== 第 8 頁：處方建議 ===== -->
+  <div class="page">
+    <div class="page-header">
+      <div class="header-left">
+        <img src="https://www.stark.works/cdn/shop/files/logo_stark.png" alt="史塔克" class="logo-image" />
+      </div>
+      <div class="header-right">
+        <div class="report-title">初評報告</div>
+        <div class="date-info">日期：${evaluation.date || ""}</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; margin: 20px 0;">
+      <div style="display: inline-block; padding: 8px 30px; border: 2px solid #D35400; border-radius: 30px; background: white;">
+        <span style="color: #D35400; font-weight: 600; font-size: 14pt; letter-spacing: 5px;">處 方 建 議</span>
+      </div>
+    </div>
+
+    <div class="section">
+      ${renderPrescriptionSection(evaluation.prescriptions)}
+    </div>
+  </div>
+  `
+      : ""
+  }
 </body>
 </html>
 `;
