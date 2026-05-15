@@ -243,6 +243,24 @@ export default function ComponentsShowcase() {
         </div>
 
         <div className="space-y-12">
+          {/* Week 1 Day 1 — Design Token Smoketest */}
+          <section className="space-y-3 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Design Tokens (Week 1 Day 1)
+            </h2>
+            <div className="flex gap-2 flex-wrap">
+              <span className="bg-brand-primary text-white px-3 py-1 rounded">brand-primary</span>
+              <span className="bg-brand-accent text-white px-3 py-1 rounded">brand-accent</span>
+              <span className="bg-client-warm text-foreground px-3 py-1 rounded border">client-warm</span>
+              <span className="bg-status-good-bg text-status-good px-3 py-1 rounded">status-good</span>
+              <span className="bg-status-warn-bg text-status-warn px-3 py-1 rounded">status-warn</span>
+              <span className="bg-status-danger-bg text-status-danger px-3 py-1 rounded">status-danger</span>
+            </div>
+            <p className="font-body text-sm text-muted-foreground">
+              font-body / Inter — 中文 fallback Noto Sans TC
+            </p>
+          </section>
+
           {/* Text Colors Section */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Text Colors</h3>
