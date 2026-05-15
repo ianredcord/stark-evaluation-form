@@ -11,6 +11,7 @@ import TemplateEdit from "./pages/TemplateEdit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
 import ClientDetailPage from "./pages/ClientDetailPage";
+import Login from "./pages/Login";
 import ClientReportPage from "./pages/ClientReportPage";
 import PrescriptionsAdmin from "./pages/PrescriptionsAdmin";
 import Settings from "./pages/Settings";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/components" component={ComponentShowcase} />
       <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
       <Route path="/clients/:id" component={ClientDetailPage} />
+      <Route path="/auth/login" component={Login} />
       <Route path="/r/:shareCode" component={ClientReportPage} />
       <Route path="/prescriptions" component={PrescriptionsAdmin} />
       <Route path="/404" component={NotFound} />
