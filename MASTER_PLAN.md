@@ -1,3 +1,13 @@
+> ⚠️ **DEPRECATED — 2026/05/15 起本文件不再維護**
+>
+> 這份 MASTER_PLAN.md 是 Manus 時代的 4 週 MVP 路線圖,已被
+> [`WEB_ARCHITECTURE_PLAN.md`](./WEB_ARCHITECTURE_PLAN.md) 完全取代。
+>
+> 保留本文件僅為歷史脈絡參考。所有 Week 1-6 的開發任務、
+> Migration 順序、設計北極星對照,請看新文件。
+>
+> ---
+
 # Stark Evaluation System · 4-Week SaaS MVP 主計畫
 
 > 這份文件是給 Claude Code 看的。
