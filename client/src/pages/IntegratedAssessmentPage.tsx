@@ -117,6 +117,24 @@ export default function IntegratedAssessmentPage() {
     setDrawerOpen(true);
   };
 
+  const TAB_TO_DRAWER: Record<string, DrawerTabKey> = {
+    complaint: "basic",
+    posture: "posture",
+    functional: "functional",
+    "body-comp": "body-comp",
+    neuromuscular: "redcord",
+  };
+
+  const handleTabChange = (key: string) => {
+    if (TAB_TO_DRAWER[key]) {
+      openDrawer(TAB_TO_DRAWER[key]);
+      // stay on 綜合結論 view so the page-level layout is preserved
+      setActiveTab("summary");
+    } else {
+      setActiveTab(key);
+    }
+  };
+
   const formSnapshot = useMemo(
     () => ({
       judgment,
@@ -161,7 +179,7 @@ export default function IntegratedAssessmentPage() {
         autosaveStatus={autosaveStatus}
         tabs={demoTabs}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         onBack={() => window.history.back()}
         onImport={() => openDrawer("basic")}
       />
@@ -177,13 +195,10 @@ export default function IntegratedAssessmentPage() {
         </div>
 
         <div className="flex-1 min-w-0 p-4 sm:p-6 space-y-5">
-          {activeTab !== "summary" ? (
-            <PlaceholderTab
-              label={demoTabs.find((t) => t.key === activeTab)?.label ?? ""}
-              clientId={clientId}
-            />
-          ) : (
-            <>
+          {/* All tabs always show the summary view; non-summary tabs open the
+              Drawer to the matching form (see handleTabChange). */}
+          <>
+            <span className="sr-only">client {clientId}</span>
               {/* ① 主訴 / 症狀 */}
               <SectionCard
                 n={1}
@@ -475,8 +490,7 @@ export default function IntegratedAssessmentPage() {
                   </div>
                 )}
               </SectionCard>
-            </>
-          )}
+          </>
         </div>
 
         <div className="hidden xl:block">
@@ -568,24 +582,3 @@ function SectionCard({
   );
 }
 
-function PlaceholderTab({
-  label,
-  clientId,
-}: {
-  label: string;
-  clientId: string;
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-12 text-center">
-      <p className="font-display text-lg font-semibold text-muted-foreground">
-        「{label}」分頁
-      </p>
-      <p className="text-sm text-muted-foreground mt-2">
-        Week 4 將把 Page 1-7 重構成 Drawer 子表單,接到這裡。
-      </p>
-      <p className="text-xs text-muted-foreground/70 mt-1 tabular-nums">
-        clientId: {clientId}
-      </p>
-    </div>
-  );
-}
