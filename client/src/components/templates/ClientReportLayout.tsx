@@ -34,7 +34,7 @@ export function ClientReportLayout({
 }: ClientReportLayoutProps) {
   return (
     <div className="flex min-h-screen bg-client-warm text-foreground font-body">
-      <aside className="w-48 shrink-0 bg-brand-primary text-white flex flex-col sticky top-0 h-screen">
+      <aside className="hidden lg:flex w-48 shrink-0 bg-brand-primary text-white flex-col sticky top-0 h-screen">
         <div className="px-5 pt-5 pb-6">
           <div className="inline-flex items-center gap-2">
             <span className="text-brand-accent text-xl">✦</span>
@@ -77,7 +77,14 @@ export function ClientReportLayout({
       </aside>
 
       <main className="flex-1 min-w-0">
-        <header className="flex items-center justify-end gap-3 px-8 pt-5">
+        <div className="lg:hidden bg-brand-primary text-white px-5 py-3 flex items-center justify-between">
+          <div className="inline-flex items-center gap-2">
+            <span className="text-brand-accent text-lg">✦</span>
+            <span className="font-display text-lg font-bold tracking-wide">STARK</span>
+          </div>
+          <span className="text-xs text-white/70">整合諮詢報告</span>
+        </div>
+        <header className="flex items-center justify-end gap-3 px-4 sm:px-8 pt-5">
           {shareCode && (
             <span className="text-xs text-muted-foreground tabular-nums">
               連結代碼 {shareCode}
@@ -93,7 +100,7 @@ export function ClientReportLayout({
             下載 PDF
           </Button>
         </header>
-        <div className="px-8 pb-10 pt-2">{children}</div>
+        <div className="px-4 sm:px-8 pb-10 pt-2">{children}</div>
       </main>
     </div>
   );

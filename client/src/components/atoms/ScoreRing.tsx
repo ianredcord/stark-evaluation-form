@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useCountUp } from "@/lib/motion";
 
 const SIZE_MAP = {
   sm: { dim: 48, stroke: 4, font: "text-sm" },
@@ -22,6 +23,7 @@ export type ScoreRingProps = {
   color?: keyof typeof COLOR_MAP;
   showValue?: boolean;
   label?: string;
+  animate?: boolean;
   className?: string;
 };
 
@@ -32,13 +34,16 @@ export function ScoreRing({
   color = "primary",
   showValue = true,
   label,
+  animate = true,
   className,
 }: ScoreRingProps) {
   const { dim, stroke, font } = SIZE_MAP[size];
   const radius = (dim - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(value, max));
-  const offset = circumference * (1 - clamped / max);
+  const animatedValue = useCountUp(animate ? clamped : clamped, animate ? 1100 : 0);
+  const displayValue = animate ? animatedValue : clamped;
+  const offset = circumference * (1 - displayValue / max);
 
   return (
     <div className={cn("inline-flex flex-col items-center gap-2", className)}>
@@ -68,6 +73,7 @@ export function ScoreRing({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
+            style={{ transition: "stroke-dashoffset 0.6s ease-out" }}
           />
         </svg>
         {showValue && (
@@ -78,7 +84,7 @@ export function ScoreRing({
               COLOR_MAP[color]
             )}
           >
-            {clamped}
+            {displayValue}
           </div>
         )}
       </div>

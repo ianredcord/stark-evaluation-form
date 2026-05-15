@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { ClientReportLayout } from "@/components/templates/ClientReportLayout";
 import { HeroScoreBlock } from "@/components/organisms/HeroScoreBlock";
 import { PriorityFindingsList } from "@/components/organisms/PriorityFindingsList";
@@ -64,7 +66,13 @@ export default function ClientReportPage() {
       shareCode={shareCode}
       onDownloadPdf={() => alert("Week 6 啟用 Puppeteer PDF")}
     >
-      <div className="max-w-6xl mx-auto space-y-5">
+      <motion.div
+        className="max-w-6xl mx-auto space-y-5"
+        variants={stagger}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={fadeUp}>
         <HeroScoreBlock
           clientName={demoClient.name}
           evaluationDate={r.evaluationDate}
@@ -74,8 +82,12 @@ export default function ClientReportPage() {
           encouragement={r.encouragement}
           subScores={r.subScores}
         />
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4"
+          variants={fadeUp}
+        >
           <PriorityFindingsList
             findings={r.priorityFindings}
             goodNews={r.goodNews}
@@ -89,36 +101,47 @@ export default function ClientReportPage() {
             sources={r.dataSources}
             completedAt={r.evaluationDate}
           />
-        </div>
+        </motion.div>
 
-        <YourStrengthsBanner
-          strengths={r.strengths}
-          closing={r.strengthsClosing}
-        />
+        <motion.div variants={fadeUp}>
+          <YourStrengthsBanner
+            strengths={r.strengths}
+            closing={r.strengthsClosing}
+          />
+        </motion.div>
 
-        <ActionPlanSection
-          recommendations={r.recommendations}
-          weekPlan={demoWeekPlan}
-          onViewPlan={() => alert("展開完整改善計畫")}
-        />
+        <motion.div variants={fadeUp}>
+          <ActionPlanSection
+            recommendations={r.recommendations}
+            weekPlan={demoWeekPlan}
+            onViewPlan={() => alert("展開完整改善計畫")}
+          />
+        </motion.div>
 
-        <PrescriptionSection
-          intro={r.prescriptionsIntro}
-          prescriptions={prescriptions}
-          onViewAll={() => (window.location.href = "/prescriptions")}
-        />
+        <motion.div variants={fadeUp}>
+          <PrescriptionSection
+            intro={r.prescriptionsIntro}
+            prescriptions={prescriptions}
+            onViewAll={() => (window.location.href = "/prescriptions")}
+          />
+        </motion.div>
 
-        <ClientCTABar
-          onBookReassess={() => alert("Week 6 / Phase 2 預約系統")}
-          onContactTherapist={() => alert("LINE / SMS / Email 是 Phase 2")}
-        />
+        <motion.div variants={fadeUp}>
+          <ClientCTABar
+            onBookReassess={() => alert("Week 6 / Phase 2 預約系統")}
+            onContactTherapist={() => alert("LINE / SMS / Email 是 Phase 2")}
+          />
+        </motion.div>
 
-        <footer className="text-center text-xs text-muted-foreground py-4">
+        <motion.footer
+          variants={fadeUp}
+          className="text-center text-xs text-muted-foreground py-4"
+        >
           本報告僅供健康管理參考,若有不適請諮詢專業醫療人員。
           <br />© 2026 STARK Health · 由 {demoClient.primaryTherapist} 物理治療師
           提供
-        </footer>
-      </div>
+        </motion.footer>
+      </motion.div>
     </ClientReportLayout>
   );
 }

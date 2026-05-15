@@ -32,12 +32,12 @@ export function HeroScoreBlock({
   return (
     <section className="space-y-4">
       <div className="space-y-1">
-        <h1 className="font-display text-3xl font-bold text-foreground">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
           Hi {clientName},這是你的整合諮詢報告
         </h1>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground tabular-nums">
+        <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground tabular-nums">
           <span>評估日期:{evaluationDate}</span>
-          <span>
+          <span className="whitespace-nowrap">
             上次 {lastScore} → 這次{" "}
             <span className="text-status-good font-semibold">{currentScore}</span>{" "}
             {delta > 0 && <span className="text-status-good">↑</span>}
@@ -47,14 +47,14 @@ export function HeroScoreBlock({
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_2fr] gap-4">
         {/* Big score */}
-        <div className="flex items-center gap-5 rounded-xl border bg-card p-5">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 rounded-xl border bg-card p-5">
           <ScoreRing
             value={currentScore}
             size="xl"
             color="primary"
             label="整體身體功能分數"
           />
-          <StatusPill status={state.tone} size="md">
+          <StatusPill status={state.tone} size="md" className="whitespace-nowrap">
             {state.label}
           </StatusPill>
         </div>
