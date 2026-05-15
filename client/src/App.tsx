@@ -12,11 +12,14 @@ import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
 import ClientReportPage from "./pages/ClientReportPage";
 import PrescriptionsAdmin from "./pages/PrescriptionsAdmin";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/clients" component={Home} />
+      <Route path="/settings" component={Settings} />
       <Route path="/evaluation/new" component={EvaluationForm} />
       <Route path="/evaluation/:id" component={EvaluationForm} />
       <Route path="/templates" component={Templates} />

@@ -16,17 +16,22 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { key: "clients", label: "客戶管理", icon: Users, href: "/clients" },
-  { key: "initial", label: "初評表", icon: ClipboardList, href: "/initial" },
-  { key: "checks", label: "檢測資料", icon: Activity, href: "/checks" },
+  { key: "clients", label: "客戶管理", icon: Users, href: "/" },
+  {
+    key: "initial",
+    label: "初評表",
+    icon: ClipboardList,
+    href: "/evaluation/new",
+  },
+  { key: "checks", label: "檢測資料", icon: Activity, href: "/templates" },
   {
     key: "integrated",
     label: "整合評估",
     icon: LayoutDashboard,
-    href: "#",
+    href: "/",
   },
-  { key: "report", label: "報告產生", icon: FileText, href: "/report" },
-  { key: "schedule", label: "課程計畫", icon: CalendarDays, href: "/schedule" },
+  { key: "report", label: "報告產生", icon: FileText, href: "/prescriptions" },
+  { key: "schedule", label: "課程計畫", icon: CalendarDays, href: "/" },
 ] as const;
 
 export type TherapistLayoutProps = {
@@ -120,10 +125,12 @@ export function TherapistLayout({
             <Bell className="w-4 h-4" />
             <span>通知中心</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/5 hover:text-white">
-            <Settings className="w-4 h-4" />
-            <span>設定</span>
-          </button>
+          <Link href="/settings">
+            <a className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/5 hover:text-white">
+              <Settings className="w-4 h-4" />
+              <span>設定</span>
+            </a>
+          </Link>
         </div>
         <div className="px-3 py-3 border-t border-white/10 flex items-center gap-2">
           <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-white/10 text-sm font-display font-semibold">
