@@ -45,14 +45,12 @@ function EvaluationFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const totalPages = 8;
 
   // tRPC mutations
   const createMutation = trpc.evaluation.create.useMutation();
   const updateMutation = trpc.evaluation.update.useMutation();
-  const pdfMutation = trpc.pdf.generate.useMutation();
   const shareLinkMutation = trpc.evaluation.generateShareLink.useMutation();
 
   // 範本相關
@@ -520,45 +518,6 @@ function EvaluationFormContent() {
           </div>
         </div>
       </header>
-
-      {/* PDF 下載連結顯示區 */}
-      {pdfUrl && (
-        <div className="container mt-4">
-          <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <FileDown className="w-6 h-6 text-green-600" />
-              <div>
-                <p className="font-bold text-green-800">PDF 已生成完成！</p>
-                <p className="text-sm text-green-600">請點擊下方按鈕下載，或複製連結後在瀏覽器開啟</p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors"
-              >
-                <FileDown className="w-5 h-5" />
-                下載 PDF
-              </a>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(pdfUrl);
-                  toast.success("已複製 PDF 連結！");
-                }}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-green-600 text-green-700 font-bold hover:bg-green-50 transition-colors"
-              >
-                複製連結
-              </button>
-            </div>
-          </div>
-          <div className="mt-2 p-2 bg-gray-100 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">下載連結（可複製）：</p>
-            <p className="text-xs text-gray-700 break-all select-all font-mono">{pdfUrl}</p>
-          </div>
-        </div>
-      )}
 
       {/* 進度導航 */}
       <div className="container">
