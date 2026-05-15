@@ -17,6 +17,7 @@ const defaultPageLabels = [
   "紅繩檢測",
   "RONFIC",
   "訓練計畫",
+  "處方建議",
 ];
 
 export function FormNavigation({

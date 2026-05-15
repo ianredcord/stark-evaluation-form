@@ -9,6 +9,7 @@ import { Page4FunctionalLower } from "@/components/pages/Page4FunctionalLower";
 import { Page5Redcord } from "@/components/pages/Page5Redcord";
 import { Page6Ronfic } from "@/components/pages/Page6Ronfic";
 import { Page7TrainingPlan } from "@/components/pages/Page7TrainingPlan";
+import { Page8Prescription } from "@/components/pages/Page8Prescription";
 import { DateInput } from "@/components/FormFields";
 import { FileDown, Save, Loader2, LayoutTemplate } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -46,7 +47,7 @@ function EvaluationFormContent() {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const totalPages = 7;
+  const totalPages = 8;
 
   // tRPC mutations
   const createMutation = trpc.evaluation.create.useMutation();
@@ -109,6 +110,7 @@ function EvaluationFormContent() {
           clientSignature: existingEvaluation.clientSignature || "",
           coachSignature: existingEvaluation.coachSignature || "",
         },
+        prescriptions: ((existingEvaluation as any).prescriptions as any) || [],
       });
     }
   }, [existingEvaluation, loadFormData]);
@@ -200,7 +202,9 @@ function EvaluationFormContent() {
       trainingPlans: formData.trainingPlan.plans,
       notes: formData.trainingPlan.notes,
       photos: formData.trainingPlan.photos,
-      
+
+      prescriptions: formData.prescriptions,
+
       clientSignature: formData.trainingPlan.clientSignature,
       coachSignature: formData.trainingPlan.coachSignature,
     };
@@ -330,6 +334,8 @@ function EvaluationFormContent() {
         return <Page6Ronfic />;
       case 7:
         return <Page7TrainingPlan />;
+      case 8:
+        return <Page8Prescription />;
       default:
         return <Page1BasicInfo />;
     }

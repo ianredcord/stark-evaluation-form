@@ -207,6 +207,17 @@ export interface RonficAssessment {
   ximResult: string; // 圖片 URL
 }
 
+// 處方選擇(第 8 頁產出)
+export interface PrescriptionSelection {
+  riskItemKey: MotiRiskKey;
+  level: "warn" | "danger";
+  selectedFasciaIds: string[];
+  selectedAcupointIds: string[];
+  selectedExerciseIds: string[];
+  selectedDeviceIds: string[];
+  customNotes: string;
+}
+
 // 訓練計畫項目
 export interface TrainingPlanItem {
   session: string;
@@ -232,6 +243,7 @@ export interface EvaluationFormData {
   redcord: RedcordAssessment;
   ronfic: RonficAssessment;
   trainingPlan: TrainingPlan;
+  prescriptions: PrescriptionSelection[];
   createdAt?: string;
   updatedAt?: string;
   createdBy?: number;
@@ -379,6 +391,8 @@ export const defaultTrainingPlan: TrainingPlan = {
   coachSignature: "",
 };
 
+export const defaultPrescriptions: PrescriptionSelection[] = [];
+
 export const defaultEvaluationFormData: EvaluationFormData = {
   basicInfo: defaultBasicInfo,
   motiPhysio: defaultMotiPhysioReport,
@@ -387,4 +401,5 @@ export const defaultEvaluationFormData: EvaluationFormData = {
   redcord: defaultRedcordAssessment,
   ronfic: defaultRonficAssessment,
   trainingPlan: defaultTrainingPlan,
+  prescriptions: defaultPrescriptions,
 };

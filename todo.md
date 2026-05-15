@@ -200,3 +200,16 @@
 - [x] 更新表單資料結構支援多張照片
 - [x] 更新 PDF 模板顯示三張評估照片
 - [x] 測試照片上傳和 PDF 輸出功能
+
+## SaaS Week 1：處方建議系統（Task 02-04）
+- [x] Task 02：建立 `shared/prescriptionKB.ts` 處方知識庫骨架
+- [x] Task 02：高優先 4 項（hkaRight/roundShoulder/lumbarLordosis/shoulderDiff）warn+danger 範例內容
+- [x] Task 03：新增第 8 頁「處方建議」UI（自動帶出失衡項目 + 四欄處方卡片）
+- [x] Task 03：更新 FormNavigation 至 8 頁（含「處方建議」標籤）
+- [x] Task 04：`shared/evaluation.ts` 加 `PrescriptionSelection` 型別
+- [x] Task 04：`drizzle/schema.ts` 加 `prescriptions json` 欄 + migration 0005
+- [x] Task 04：`server/routers.ts` evaluationInputSchema 加 prescriptions
+- [x] Task 04：EvaluationFormContext 加 `updatePrescriptions` action
+- [x] Task 04：EvaluationForm.tsx save/load mapping 含 prescriptions
+- [ ] Task 04：實機驗收 — 完整跑 1 份 Page 1-8 評估，重新整理勾選還在
+- [ ] 處方知識庫補完其他 8 項失衡（Phase 2）

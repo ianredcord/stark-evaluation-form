@@ -8,6 +8,7 @@ import {
   RedcordAssessment,
   RonficAssessment,
   TrainingPlan,
+  PrescriptionSelection,
   defaultEvaluationFormData,
 } from "../../../shared/evaluation";
 
@@ -30,7 +31,8 @@ interface EvaluationFormContextType {
   updateRedcord: (data: Partial<RedcordAssessment>) => void;
   updateRonfic: (data: Partial<RonficAssessment>) => void;
   updateTrainingPlan: (data: Partial<TrainingPlan>) => void;
-  
+  updatePrescriptions: (data: PrescriptionSelection[]) => void;
+
   // 表單操作
   resetForm: () => void;
   loadFormData: (data: EvaluationFormData) => void;
@@ -43,7 +45,7 @@ export function EvaluationFormProvider({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [completedPages, setCompletedPages] = useState<number[]>([]);
 
-  const totalPages = 7;
+  const totalPages = 8;
 
   const goToNextPage = useCallback(() => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -109,6 +111,13 @@ export function EvaluationFormProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updatePrescriptions = useCallback((data: PrescriptionSelection[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      prescriptions: data,
+    }));
+  }, []);
+
   const resetForm = useCallback(() => {
     setFormData(defaultEvaluationFormData);
     setCurrentPage(1);
@@ -136,6 +145,7 @@ export function EvaluationFormProvider({ children }: { children: ReactNode }) {
         updateRedcord,
         updateRonfic,
         updateTrainingPlan,
+        updatePrescriptions,
         resetForm,
         loadFormData,
       }}

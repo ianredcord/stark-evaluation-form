@@ -101,7 +101,9 @@ const evaluationInputSchema = z.object({
   trainingPlans: z.any().optional(),
   notes: z.string().optional(),
   photos: z.any().optional(),
-  
+
+  prescriptions: z.any().optional(),
+
   clientSignature: z.string().optional(),
   coachSignature: z.string().optional(),
 });

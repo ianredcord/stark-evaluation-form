@@ -79,6 +79,9 @@ export const evaluations = mysqlTable("evaluations", {
   // 訓練計畫（JSON 格式儲存）
   trainingPlans: json("trainingPlans"),
   notes: text("notes"),
+
+  // 處方選擇（JSON 陣列：PrescriptionSelection[]）
+  prescriptions: json("prescriptions"),
   
   // 評估照片（JSON 陣列儲存圖片 URL）
   photos: json("photos"),
