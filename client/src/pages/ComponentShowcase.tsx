@@ -181,7 +181,11 @@ import { ProgressBar } from "@/components/atoms/ProgressBar";
 import { DataLabelValue } from "@/components/atoms/DataLabelValue";
 import { EditableLabel } from "@/components/atoms/EditableLabel";
 import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
-import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope } from "lucide-react";
+import { ScoreCard } from "@/components/molecules/ScoreCard";
+import { SubScoreCard } from "@/components/molecules/SubScoreCard";
+import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard";
+import { StatusListItem } from "@/components/molecules/StatusListItem";
+import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope, Bone, Brain, Scale, AlertTriangle } from "lucide-react";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -460,6 +464,106 @@ export default function ComponentsShowcase() {
                   />
                   <span className="text-xs text-muted-foreground">lg + 5 hotspots</span>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 4 — Molecules Part 1 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Molecules — Part 1 (Week 1 Day 4)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ScoreCard (client hero)</h3>
+              <ScoreCard
+                value={68}
+                title="整體身體功能分數"
+                subtitle="你目前的身體功能屬於中等偏佳,在姿勢與核心穩定方面仍有提升空間。"
+                status={{ label: "中等偏佳", tone: "warn" }}
+                trend={{ delta: 7 }}
+                ringSize="xl"
+                className="max-w-2xl"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SubScoreCard ×4 (client 4 sub-scores)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl">
+                <SubScoreCard
+                  label="姿勢結構"
+                  value={66}
+                  icon={<Bone />}
+                  iconBg="primary"
+                  status={{ label: "中等", tone: "warn" }}
+                  trend={7}
+                />
+                <SubScoreCard
+                  label="動作功能"
+                  value={70}
+                  icon={<Activity />}
+                  iconBg="good"
+                  status={{ label: "中等偏佳", tone: "good" }}
+                  trend={8}
+                />
+                <SubScoreCard
+                  label="神經肌肉控制"
+                  value={64}
+                  icon={<Brain />}
+                  iconBg="violet"
+                  status={{ label: "中等", tone: "warn" }}
+                  trend={8}
+                />
+                <SubScoreCard
+                  label="體組成"
+                  value={72}
+                  icon={<Scale />}
+                  iconBg="warm"
+                  status={{ label: "良好", tone: "good" }}
+                  trend={4}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">PriorityFindingCard ×3 (top 3 issues)</h3>
+              <div className="space-y-2 max-w-2xl">
+                <PriorityFindingCard
+                  n={1}
+                  title="骨盆略為前傾,左右平衡需加強"
+                  description="長時間坐姿習慣可能影響骨盆穩定。"
+                  icon={<AlertTriangle />}
+                  iconBg="warn"
+                  tone="warn"
+                />
+                <PriorityFindingCard
+                  n={2}
+                  title="頭頸前傾與肩頸緊繃"
+                  description="頸椎前傾角度偏大,容易引起肩頸不適。"
+                  icon={<AlertTriangle />}
+                  iconBg="danger"
+                  tone="danger"
+                />
+                <PriorityFindingCard
+                  n={3}
+                  title="核心穩定性不足"
+                  description="核心肌群啟動不足,影響動作效率與保護力。"
+                  icon={<Target />}
+                  iconBg="primary"
+                  tone="primary"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">StatusListItem (body part risk list)</h3>
+              <div className="max-w-md divide-y border rounded-lg bg-card px-4">
+                <StatusListItem label="頭頸" value={42} status="danger" hint="緊繃風險較高" />
+                <StatusListItem label="肩頸" value={48} status="danger" hint="緊繃風險較高" />
+                <StatusListItem label="胸椎" value={62} status="warn" hint="活動度偏低" />
+                <StatusListItem label="骨盆" value={58} status="warn" hint="穩定性偏弱" />
+                <StatusListItem label="右膝" value={55} status="warn" hint="壓力偏高" />
+                <StatusListItem label="體組成" value={82} status="good" hint="表現良好" />
               </div>
             </div>
           </section>
