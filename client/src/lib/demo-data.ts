@@ -304,6 +304,67 @@ export const demoClientReport = {
   shareCode: "abc123",
 };
 
+// --- Past evaluations history (for ClientDetailPage trend) ---
+
+export type DemoEvaluationHistoryItem = {
+  id: string;
+  date: string;
+  overallScore: number;
+  postureScore: number;
+  movementScore: number;
+  neuroScore: number;
+  bodyScore: number;
+  topConcern: string;
+};
+
+export const demoEvaluationHistory: Record<
+  string,
+  readonly DemoEvaluationHistoryItem[]
+> = {
+  "demo-001": [
+    {
+      id: "eval-2026-05-13",
+      date: "2026/05/13",
+      overallScore: 68,
+      postureScore: 66,
+      movementScore: 70,
+      neuroScore: 64,
+      bodyScore: 72,
+      topConcern: "骨盆前傾、核心穩定不足",
+    },
+    {
+      id: "eval-2026-04-15",
+      date: "2026/04/15",
+      overallScore: 61,
+      postureScore: 59,
+      movementScore: 62,
+      neuroScore: 56,
+      bodyScore: 68,
+      topConcern: "下背痠痛、頸前傾",
+    },
+    {
+      id: "eval-2026-03-08",
+      date: "2026/03/08",
+      overallScore: 54,
+      postureScore: 50,
+      movementScore: 55,
+      neuroScore: 48,
+      bodyScore: 64,
+      topConcern: "整體核心無力、姿勢不良",
+    },
+    {
+      id: "eval-2026-02-01",
+      date: "2026/02/01",
+      overallScore: 49,
+      postureScore: 45,
+      movementScore: 50,
+      neuroScore: 42,
+      bodyScore: 60,
+      topConcern: "初評 — 評估基準",
+    },
+  ],
+};
+
 // --- Therapist home client list ---
 
 export type DemoClientListItem = {

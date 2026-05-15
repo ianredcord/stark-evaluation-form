@@ -10,6 +10,7 @@ import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
+import ClientDetailPage from "./pages/ClientDetailPage";
 import ClientReportPage from "./pages/ClientReportPage";
 import PrescriptionsAdmin from "./pages/PrescriptionsAdmin";
 import Settings from "./pages/Settings";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/components" component={ComponentShowcase} />
       <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
+      <Route path="/clients/:id" component={ClientDetailPage} />
       <Route path="/r/:shareCode" component={ClientReportPage} />
       <Route path="/prescriptions" component={PrescriptionsAdmin} />
       <Route path="/404" component={NotFound} />

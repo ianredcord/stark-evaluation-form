@@ -40,12 +40,41 @@ export type TherapistLayoutProps = {
   children: React.ReactNode;
 };
 
+const DEMO_NOTIFICATIONS = [
+  {
+    icon: "✓",
+    color: "good" as const,
+    title: "陳小妍 查看了你的報告",
+    time: "10 分鐘前",
+  },
+  {
+    icon: "📅",
+    color: "warn" as const,
+    title: "張大華 的複評時間將在 3 天後到期",
+    time: "1 小時前",
+  },
+  {
+    icon: "📝",
+    color: "primary" as const,
+    title: "林美芳 完成第 1 週訓練自我回報",
+    time: "今天 09:14",
+  },
+];
+
+const NOTIF_DOT_COLOR = {
+  good: "bg-status-good",
+  warn: "bg-status-warn",
+  danger: "bg-status-danger",
+  primary: "bg-brand-primary",
+} as const;
+
 export function TherapistLayout({
   activeKey = "integrated",
   user = { name: "林昱辰", role: "物理治療師", initial: "林" },
   children,
 }: TherapistLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-bg-page text-foreground font-body">
@@ -121,9 +150,15 @@ export function TherapistLayout({
           })}
         </nav>
         <div className="px-2 pb-2 space-y-0.5 border-t border-white/10 pt-2">
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/5 hover:text-white">
+          <button
+            onClick={() => setNotifOpen((v) => !v)}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/5 hover:text-white relative"
+          >
             <Bell className="w-4 h-4" />
             <span>通知中心</span>
+            <span className="ml-auto inline-flex items-center justify-center w-4 h-4 rounded-full bg-status-warn text-[10px] font-bold text-white tabular-nums">
+              3
+            </span>
           </button>
           <Link href="/settings">
             <a className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/5 hover:text-white">
@@ -143,6 +178,47 @@ export function TherapistLayout({
           <ChevronDown className="w-4 h-4 text-white/60" />
         </div>
       </aside>
+
+      {/* Notifications popover */}
+      {notifOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setNotifOpen(false)}
+          />
+          <div className="fixed bottom-20 left-2 lg:left-52 w-72 rounded-xl border bg-card shadow-xl z-50 overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <h3 className="font-display font-semibold text-sm">通知中心</h3>
+              <span className="text-xs text-muted-foreground">3 則未讀</span>
+            </div>
+            <ul className="max-h-80 overflow-y-auto divide-y">
+              {DEMO_NOTIFICATIONS.map((n, i) => (
+                <li key={i} className="px-4 py-3 hover:bg-muted">
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className={cn(
+                        "w-2 h-2 mt-1.5 rounded-full shrink-0",
+                        NOTIF_DOT_COLOR[n.color]
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground leading-snug">
+                        {n.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {n.time}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <button className="w-full px-4 py-2 text-xs text-brand-primary hover:bg-muted border-t">
+              全部標示為已讀
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Main */}
       <main className="flex-1 min-w-0 pt-12 lg:pt-0">{children}</main>

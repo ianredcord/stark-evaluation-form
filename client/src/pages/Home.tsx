@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { NewClientDialog } from "@/components/organisms/NewClientDialog";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
@@ -36,6 +37,8 @@ type StatusFilter = DemoClientListItem["status"] | "all";
 export default function Home() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
+  const [newClientOpen, setNewClientOpen] = useState(false);
+  const [, navigate] = useLocation();
 
   const filtered = demoClientList.filter((c) => {
     if (filter !== "all" && c.status !== filter) return false;
@@ -67,7 +70,7 @@ export default function Home() {
             </p>
           </div>
           <Button
-            onClick={() => alert("新增客戶 — Week 4 後接 tRPC mutation")}
+            onClick={() => setNewClientOpen(true)}
             className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
           >
             <UserPlus className="w-4 h-4" />
@@ -149,7 +152,7 @@ export default function Home() {
         {/* Client cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((c) => (
-            <Link key={c.id} href={`/clients/${c.id}/assessment`}>
+            <Link key={c.id} href={`/clients/${c.id}`}>
               <a className="rounded-xl border bg-card p-4 hover:shadow-md hover:border-brand-primary/40 transition-all group block">
                 <div className="flex items-start gap-3">
                   <span className="inline-flex w-12 h-12 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display text-lg font-bold shrink-0">
@@ -209,6 +212,18 @@ export default function Home() {
           </p>
         )}
       </div>
+
+      <NewClientDialog
+        open={newClientOpen}
+        onOpenChange={setNewClientOpen}
+        onCreate={(data) => {
+          // Stub: in real flow, tRPC mutation creates client then we
+          // navigate to /clients/<id>/assessment. For demo we just hop
+          // to chen xiaoyans assessment so the new-eval flow runs.
+          console.log("New client (stub):", data);
+          navigate(`/clients/demo-001/assessment`);
+        }}
+      />
     </TherapistLayout>
   );
 }
