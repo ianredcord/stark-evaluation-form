@@ -304,6 +304,96 @@ export const demoClientReport = {
   shareCode: "abc123",
 };
 
+// --- Therapist home client list ---
+
+export type DemoClientListItem = {
+  id: string;
+  name: string;
+  initial: string;
+  age: number;
+  gender: string;
+  lastEvaluation: string;
+  lastScore: number;
+  trend: number;
+  status: "active" | "pending" | "completed";
+  primaryConcern: string;
+};
+
+export const demoClientList: readonly DemoClientListItem[] = [
+  {
+    id: "demo-001",
+    name: "陳小妍",
+    initial: "陳",
+    age: 24,
+    gender: "女性",
+    lastEvaluation: "2026/05/13",
+    lastScore: 68,
+    trend: 7,
+    status: "active",
+    primaryConcern: "下背疼痛、頸部緊繃",
+  },
+  {
+    id: "demo-002",
+    name: "王志明",
+    initial: "王",
+    age: 35,
+    gender: "男性",
+    lastEvaluation: "2026/05/12",
+    lastScore: 74,
+    trend: 4,
+    status: "active",
+    primaryConcern: "肩部活動受限、跑步姿勢",
+  },
+  {
+    id: "demo-003",
+    name: "林美芳",
+    initial: "林",
+    age: 28,
+    gender: "女性",
+    lastEvaluation: "2026/05/10",
+    lastScore: 82,
+    trend: 9,
+    status: "completed",
+    primaryConcern: "產後核心訓練",
+  },
+  {
+    id: "demo-004",
+    name: "張大華",
+    initial: "張",
+    age: 45,
+    gender: "男性",
+    lastEvaluation: "2026/05/14",
+    lastScore: 56,
+    trend: -3,
+    status: "pending",
+    primaryConcern: "膝關節術後復健、平衡訓練",
+  },
+  {
+    id: "demo-005",
+    name: "黃淑芬",
+    initial: "黃",
+    age: 52,
+    gender: "女性",
+    lastEvaluation: "2026/05/08",
+    lastScore: 61,
+    trend: 2,
+    status: "active",
+    primaryConcern: "頸椎僵硬、姿勢矯正",
+  },
+  {
+    id: "demo-006",
+    name: "李建宏",
+    initial: "李",
+    age: 32,
+    gender: "男性",
+    lastEvaluation: "2026/05/15",
+    lastScore: 79,
+    trend: 11,
+    status: "active",
+    primaryConcern: "運動員體能評估",
+  },
+];
+
 export const demoTabs = [
   { key: "complaint", label: "主訴與病史" },
   { key: "posture", label: "姿勢判讀" },

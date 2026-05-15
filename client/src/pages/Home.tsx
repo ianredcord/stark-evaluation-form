@@ -1,157 +1,268 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
-import { ClipboardList, FileText, Users, LogIn, Loader2, LayoutTemplate } from "lucide-react";
+import { useState } from "react";
 import { Link } from "wouter";
+import { TherapistLayout } from "@/components/templates/TherapistLayout";
+import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/atoms/StatusPill";
+import { ChipToggle } from "@/components/atoms/ChipToggle";
+import { cn } from "@/lib/utils";
+import { demoClientList, type DemoClientListItem } from "@/lib/demo-data";
+import {
+  UserPlus,
+  Search,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ArrowRight,
+  Calendar,
+} from "lucide-react";
+
+const STATUS_LABEL: Record<DemoClientListItem["status"], string> = {
+  active: "進行中",
+  pending: "待安排",
+  completed: "已結案",
+};
+
+const STATUS_TONE: Record<
+  DemoClientListItem["status"],
+  "good" | "warn" | "neutral"
+> = {
+  active: "good",
+  pending: "warn",
+  completed: "neutral",
+};
+
+type StatusFilter = DemoClientListItem["status"] | "all";
 
 export default function Home() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [query, setQuery] = useState("");
+
+  const filtered = demoClientList.filter((c) => {
+    if (filter !== "all" && c.status !== filter) return false;
+    const q = query.trim();
+    if (!q) return true;
+    return (
+      c.name.includes(q) ||
+      c.primaryConcern.includes(q) ||
+      c.id.includes(q.toLowerCase())
+    );
+  });
+
+  const activeCount = demoClientList.filter((c) => c.status === "active").length;
+  const pendingCount = demoClientList.filter((c) => c.status === "pending").length;
+  const avgScore = Math.round(
+    demoClientList.reduce((s, c) => s + c.lastScore, 0) / demoClientList.length
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* 背景裝飾 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-stark-bg via-background to-stark-bg-card" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-stark-orange/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-stark-orange/5 rounded-full blur-3xl" />
+    <TherapistLayout activeKey="clients">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">
+              客戶總覽
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              管理你的客戶評估與追蹤進度
+            </p>
+          </div>
+          <Button
+            onClick={() => alert("新增客戶 — Week 4 後接 tRPC mutation")}
+            className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
+          >
+            <UserPlus className="w-4 h-4" />
+            新增客戶
+          </Button>
+        </header>
 
-        <div className="relative container py-20">
-          <div className="flex flex-col items-center text-center space-y-8">
-            {/* Logo - 使用官方 Logo 圖片 */}
-            <div className="flex items-center justify-center">
-              <img 
-                src="/stark-logo.webp" 
-                alt="史塔克 STARK WORKS" 
-                className="h-24 md:h-32 w-auto"
-              />
-            </div>
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="客戶總數"
+            value={demoClientList.length}
+            hint="目前所有檔案"
+          />
+          <KpiCard
+            label="進行中"
+            value={activeCount}
+            hint="評估或訓練週期內"
+            tone="good"
+          />
+          <KpiCard
+            label="待安排"
+            value={pendingCount}
+            hint="需要排程下次評估"
+            tone="warn"
+          />
+          <KpiCard
+            label="平均分數"
+            value={avgScore}
+            suffix={<span className="text-sm text-muted-foreground">/ 100</span>}
+            hint="近期評估"
+          />
+        </div>
 
-            {/* 標題 */}
-            <div className="space-y-4 max-w-2xl">
-              <h2 className="text-3xl md:text-4xl font-bold text-stark-text">
-                初評報告系統
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                專業的線上評估表單系統，讓您輕鬆完成客戶初次評估，
-                並即時生成專業的 PDF 報告。
-              </p>
-            </div>
-
-            {/* CTA 按鈕 */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              {loading ? (
-                <Button size="lg" disabled className="gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  載入中...
-                </Button>
-              ) : isAuthenticated ? (
-                <Link href="/evaluation/new">
-                  <Button
-                    size="lg"
-                    className="gap-2 bg-stark-orange hover:bg-stark-orange-dark text-white px-8"
-                  >
-                    <ClipboardList className="w-5 h-5" />
-                    開始新評估
-                  </Button>
-                </Link>
-              ) : (
-                <a href={getLoginUrl()}>
-                  <Button
-                    size="lg"
-                    className="gap-2 bg-stark-orange hover:bg-stark-orange-dark text-white px-8"
-                  >
-                    <LogIn className="w-5 h-5" />
-                    登入開始使用
-                  </Button>
-                </a>
-              )}
-
-              {isAuthenticated && (
-                <>
-                  <Link href="/evaluations">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="gap-2 border-stark-border hover:bg-stark-bg"
-                    >
-                      <FileText className="w-5 h-5" />
-                      查看歷史紀錄
-                    </Button>
-                  </Link>
-                  <Link href="/templates">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="gap-2 border-stark-border hover:bg-stark-bg"
-                    >
-                      <LayoutTemplate className="w-5 h-5" />
-                      範本管理
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* 使用者資訊 */}
-            {isAuthenticated && user && (
-              <p className="text-sm text-muted-foreground">
-                歡迎回來，{user.name || "使用者"}
-              </p>
-            )}
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="搜尋客戶姓名 / 主訴 / 編號..."
+              className="w-full pl-9 pr-3 py-2 rounded-md border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+            />
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            <ChipToggle
+              size="sm"
+              selected={filter === "all"}
+              onToggle={() => setFilter("all")}
+            >
+              全部({demoClientList.length})
+            </ChipToggle>
+            <ChipToggle
+              size="sm"
+              selected={filter === "active"}
+              onToggle={() => setFilter("active")}
+            >
+              進行中({activeCount})
+            </ChipToggle>
+            <ChipToggle
+              size="sm"
+              selected={filter === "pending"}
+              onToggle={() => setFilter("pending")}
+            >
+              待安排({pendingCount})
+            </ChipToggle>
+            <ChipToggle
+              size="sm"
+              selected={filter === "completed"}
+              onToggle={() => setFilter("completed")}
+            >
+              已結案
+            </ChipToggle>
           </div>
         </div>
-      </div>
 
-      {/* Features Section */}
-      <div className="container py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <FeatureCard
-            icon={<ClipboardList className="w-8 h-8" />}
-            title="完整評估表單"
-            description="涵蓋基本資料、功能性動作檢測、紅繩動力鍊檢測等 7 大評估項目，完整記錄客戶狀況。"
-          />
-          <FeatureCard
-            icon={<FileText className="w-8 h-8" />}
-            title="專業 PDF 報告"
-            description="一鍵生成與原始設計風格一致的專業 PDF 報告，方便列印或分享給客戶。"
-          />
-          <FeatureCard
-            icon={<Users className="w-8 h-8" />}
-            title="客戶資料管理"
-            description="所有評估資料安全儲存於雲端，隨時查閱歷史紀錄，追蹤客戶進步狀況。"
-          />
-        </div>
-      </div>
+        {/* Client cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtered.map((c) => (
+            <Link key={c.id} href={`/clients/${c.id}/assessment`}>
+              <a className="rounded-xl border bg-card p-4 hover:shadow-md hover:border-brand-primary/40 transition-all group block">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex w-12 h-12 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display text-lg font-bold shrink-0">
+                    {c.initial}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <h3 className="font-display font-semibold truncate">
+                        {c.name}
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        {c.age} 歲 · {c.gender}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {c.primaryConcern}
+                    </p>
+                  </div>
+                  <StatusPill status={STATUS_TONE[c.status]} size="sm">
+                    {STATUS_LABEL[c.status]}
+                  </StatusPill>
+                </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2024 史塔克 STARK WORKS. All rights reserved.</p>
+                <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t">
+                  <div>
+                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      上次評估
+                    </p>
+                    <p className="font-display text-sm font-medium tabular-nums">
+                      {c.lastEvaluation}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">當前分數</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-xl font-bold tabular-nums text-brand-primary">
+                        {c.lastScore}
+                      </span>
+                      <TrendBadge delta={c.trend} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  進入評估
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </a>
+            </Link>
+          ))}
         </div>
-      </footer>
+
+        {filtered.length === 0 && (
+          <p className="text-center text-muted-foreground py-12">
+            沒有符合條件的客戶
+          </p>
+        )}
+      </div>
+    </TherapistLayout>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  suffix,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: number;
+  suffix?: React.ReactNode;
+  hint?: string;
+  tone?: "good" | "warn" | "danger";
+}) {
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "font-display text-3xl font-bold tabular-nums",
+          tone === "good" && "text-status-good",
+          tone === "warn" && "text-status-warn",
+          tone === "danger" && "text-status-danger",
+          !tone && "text-foreground"
+        )}
+      >
+        {value}
+        {suffix}
+      </p>
+      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
   );
 }
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
+function TrendBadge({ delta }: { delta: number }) {
+  if (delta === 0)
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+        <Minus className="w-3 h-3" />0
+      </span>
+    );
+  if (delta > 0)
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs text-status-good">
+        <TrendingUp className="w-3 h-3" />+{delta}
+      </span>
+    );
   return (
-    <div className="stark-card hover:shadow-md transition-shadow">
-      <div className="flex flex-col items-center text-center space-y-4">
-        <div className="p-4 rounded-full bg-stark-orange/10 text-stark-orange">
-          {icon}
-        </div>
-        <h3 className="text-xl font-semibold text-stark-text">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-    </div>
+    <span className="inline-flex items-center gap-0.5 text-xs text-status-danger">
+      <TrendingDown className="w-3 h-3" />
+      {delta}
+    </span>
   );
 }

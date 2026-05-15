@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRoute } from "wouter";
+import { useAutosave } from "@/lib/useAutosave";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { AssessmentHeader } from "@/components/organisms/AssessmentHeader";
 import { ClientSidebar } from "@/components/organisms/ClientSidebar";
@@ -114,11 +115,48 @@ export default function IntegratedAssessmentPage() {
     setDrawerOpen(true);
   };
 
+  const formSnapshot = useMemo(
+    () => ({
+      judgment,
+      topIssues,
+      interventions,
+      interventionNotes,
+      plainExplanation,
+      reportNotes,
+      prescriptionIds: prescriptions.map((p) => p.prescriptionId),
+    }),
+    [
+      judgment,
+      topIssues,
+      interventions,
+      interventionNotes,
+      plainExplanation,
+      reportNotes,
+      prescriptions,
+    ]
+  );
+
+  const { status: autosaveStatus, lastSavedAt } = useAutosave(
+    formSnapshot,
+    async () => {
+      // Stub: Week 4 connects to tRPC mutation. For now just simulate latency.
+      await new Promise((r) => setTimeout(r, 400));
+    },
+    { delayMs: 1500 }
+  );
+  const autosaveAt = lastSavedAt
+    ? lastSavedAt.toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "17:28";
+
   return (
     <TherapistLayout activeKey="integrated">
       <AssessmentHeader
         title="客戶整合評估"
-        autosaveAt="17:28"
+        autosaveAt={autosaveAt}
+        autosaveStatus={autosaveStatus}
         tabs={demoTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -126,15 +164,17 @@ export default function IntegratedAssessmentPage() {
         onImport={() => openDrawer("basic")}
       />
 
-      <div className="flex">
+      <div className="flex flex-col xl:flex-row">
+        <div className="hidden lg:block">
         <ClientSidebar
           client={demoClient}
           complaint={`久坐後下背與頸部痠痛,深蹲時右膝不適。`}
           goals="改善痠痛並增進運動與穩定度。"
           progress={demoEvaluationProgress}
         />
+        </div>
 
-        <div className="flex-1 min-w-0 p-6 space-y-5">
+        <div className="flex-1 min-w-0 p-4 sm:p-6 space-y-5">
           {activeTab !== "summary" ? (
             <PlaceholderTab
               label={demoTabs.find((t) => t.key === activeTab)?.label ?? ""}
@@ -437,6 +477,7 @@ export default function IntegratedAssessmentPage() {
           )}
         </div>
 
+        <div className="hidden xl:block">
         <ReportEditSidebar
           plainExplanation={plainExplanation}
           onPlainExplanationChange={setPlainExplanation}
@@ -455,6 +496,7 @@ export default function IntegratedAssessmentPage() {
           }
           onRefreshPreview={() => alert("Refresh — 預覽即時更新")}
         />
+        </div>
       </div>
 
       <EvaluationDrawer
