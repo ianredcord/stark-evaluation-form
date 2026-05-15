@@ -233,6 +233,8 @@
 
 ## 治療師體驗增強
 - [x] EvaluationForm header 加「預覽報告」按鈕（產生 shareCode 並開新分頁）
+- [x] 修復 Home 連到 /evaluations 但路由不存在的 bug
+- [x] 新增 Evaluations.tsx 評估歷史列表頁（搜尋、瀏覽次數、同診所徽章、快速複製分享連結）
 
 ## 測試補完
 - [x] 新增 `server/report.test.ts`：7 個測試（getByShareCode 過濾欄位、view count、shareCode 驗證、generateShareLink 冪等與權限）

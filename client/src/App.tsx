@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import EvaluationForm from "./pages/EvaluationForm";
+import Evaluations from "./pages/Evaluations";
 import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
 import PublicReport from "./pages/PublicReport";
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/evaluation/new" component={EvaluationForm} />
       <Route path="/evaluation/:id" component={EvaluationForm} />
+      <Route path="/evaluations" component={Evaluations} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/report/:shareCode" component={PublicReport} />
