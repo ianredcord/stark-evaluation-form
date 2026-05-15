@@ -207,6 +207,132 @@ export async function getTemplatesForClinic(
 }
 
 /**
+ * 評估統計 — 給治療師 dashboard 用
+ * 回傳:總數、已分享數、總瀏覽次數、本月新增、最近 7 日趨勢、最近活動
+ */
+export interface EvaluationStats {
+  total: number;
+  shared: number;
+  totalViews: number;
+  thisMonth: number;
+  templates: number;
+  // 最近 7 日 [{date: 'YYYY-MM-DD', count: number}]
+  recentDays: Array<{ date: string; count: number }>;
+  // 最近 5 筆評估
+  recentEvaluations: Array<{
+    id: number;
+    clientName: string | null;
+    date: string | null;
+    viewCount: number;
+    hasShareCode: boolean;
+    isOwn: boolean;
+    createdAt: Date;
+  }>;
+}
+
+export async function getEvaluationStats(
+  userId: number,
+  clinicId: string | null,
+): Promise<EvaluationStats> {
+  const empty: EvaluationStats = {
+    total: 0,
+    shared: 0,
+    totalViews: 0,
+    thisMonth: 0,
+    templates: 0,
+    recentDays: buildLast7DaysSkeleton(),
+    recentEvaluations: [],
+  };
+
+  const db = await getDb();
+  if (!db) return empty;
+
+  try {
+    const [evals, templates] = await Promise.all([
+      getEvaluationsForClinic(userId, clinicId),
+      getTemplatesForClinic(userId, clinicId),
+    ]);
+
+    const thisMonthStart = new Date();
+    thisMonthStart.setDate(1);
+    thisMonthStart.setHours(0, 0, 0, 0);
+
+    const recentDays = buildLast7DaysSkeleton();
+    const dayIndex = new Map(recentDays.map((d, i) => [d.date, i]));
+
+    let shared = 0;
+    let totalViews = 0;
+    let thisMonth = 0;
+    evals.forEach((e) => {
+      if (e.shareCode) shared += 1;
+      totalViews += e.viewCount ?? 0;
+      if (e.createdAt && new Date(e.createdAt) >= thisMonthStart) thisMonth += 1;
+      const key = toISODate(e.createdAt);
+      const idx = dayIndex.get(key);
+      if (idx !== undefined) recentDays[idx].count += 1;
+    });
+
+    const recentEvaluations = evals.slice(0, 5).map((e) => ({
+      id: e.id,
+      clientName: e.clientName,
+      date: e.date,
+      viewCount: e.viewCount ?? 0,
+      hasShareCode: Boolean(e.shareCode),
+      isOwn: e.userId === userId,
+      createdAt: e.createdAt,
+    }));
+
+    return {
+      total: evals.length,
+      shared,
+      totalViews,
+      thisMonth,
+      templates: templates.length,
+      recentDays,
+      recentEvaluations,
+    };
+  } catch (error) {
+    console.error("[Database] Failed to compute stats:", error);
+    return empty;
+  }
+}
+
+function toISODate(d: Date | string | null): string {
+  if (!d) return "";
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toISOString().slice(0, 10);
+}
+
+function buildLast7DaysSkeleton(): Array<{ date: string; count: number }> {
+  const result: Array<{ date: string; count: number }> = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    result.push({ date: d.toISOString().slice(0, 10), count: 0 });
+  }
+  return result;
+}
+
+/**
+ * 更新使用者個人資料(名稱等)
+ */
+export async function updateUserProfile(
+  userId: number,
+  data: { name?: string | null },
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.update(users).set(data).where(eq(users.id, userId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update user profile:", error);
+    return false;
+  }
+}
+
+/**
  * 更新評估表
  */
 export async function updateEvaluation(

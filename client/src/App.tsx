@@ -10,6 +10,10 @@ import Evaluations from "./pages/Evaluations";
 import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
 import PublicReport from "./pages/PublicReport";
+import Account from "./pages/Account";
+import Dashboard from "./pages/Dashboard";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 function Router() {
   return (
@@ -21,6 +25,10 @@ function Router() {
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/report/:shareCode" component={PublicReport} />
+      <Route path="/account" component={Account} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -1,8 +1,18 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
-import { ClipboardList, FileText, Users, LogIn, Loader2, LayoutTemplate } from "lucide-react";
+import {
+  ClipboardList,
+  FileText,
+  Users,
+  LogIn,
+  Loader2,
+  LayoutTemplate,
+  LayoutDashboard,
+  UserCog,
+} from "lucide-react";
 import { Link } from "wouter";
+import { OnboardingBanner } from "@/components/OnboardingBanner";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -69,6 +79,16 @@ export default function Home() {
 
               {isAuthenticated && (
                 <>
+                  <Link href="/dashboard">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="gap-2 border-stark-border hover:bg-stark-bg"
+                    >
+                      <LayoutDashboard className="w-5 h-5" />
+                      儀表板
+                    </Button>
+                  </Link>
                   <Link href="/evaluations">
                     <Button
                       size="lg"
@@ -76,7 +96,7 @@ export default function Home() {
                       className="gap-2 border-stark-border hover:bg-stark-bg"
                     >
                       <FileText className="w-5 h-5" />
-                      查看歷史紀錄
+                      評估紀錄
                     </Button>
                   </Link>
                   <Link href="/templates">
@@ -95,13 +115,28 @@ export default function Home() {
 
             {/* 使用者資訊 */}
             {isAuthenticated && user && (
-              <p className="text-sm text-muted-foreground">
-                歡迎回來，{user.name || "使用者"}
-              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  歡迎回來,{user.name || "使用者"}
+                </p>
+                <Link href="/account">
+                  <Button variant="ghost" size="sm" className="text-xs gap-1">
+                    <UserCog className="w-3.5 h-3.5" />
+                    帳號設定
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* 新手引導 */}
+      {isAuthenticated && (
+        <div className="container -mt-12 mb-8 relative z-10">
+          <OnboardingBanner isAuthenticated={isAuthenticated} />
+        </div>
+      )}
 
       {/* Features Section */}
       <div className="container py-16">
@@ -126,8 +161,17 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container text-center text-sm text-muted-foreground space-y-2">
           <p>© 2024 史塔克 STARK WORKS. All rights reserved.</p>
+          <div className="flex justify-center gap-4 text-xs">
+            <Link href="/privacy">
+              <span className="hover:text-stark-orange cursor-pointer">隱私權政策</span>
+            </Link>
+            <span>·</span>
+            <Link href="/terms">
+              <span className="hover:text-stark-orange cursor-pointer">服務條款</span>
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

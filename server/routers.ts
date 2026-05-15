@@ -11,10 +11,12 @@ import {
   getEvaluationById,
   getEvaluationByShareCode,
   getEvaluationsForClinic,
+  getEvaluationStats,
   updateEvaluation,
   setShareCode,
   incrementViewCount,
   deleteEvaluation,
+  updateUserProfile,
   createTemplate,
   getTemplateById,
   getTemplatesForClinic,
@@ -139,6 +141,19 @@ export const appRouter = router({
       return {
         success: true,
       } as const;
+    }),
+    updateProfile: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        const ok = await updateUserProfile(ctx.user.id, { name: input.name });
+        return { success: ok };
+      }),
+  }),
+
+  // 統計 API(治療師 dashboard)
+  stats: router({
+    overview: protectedProcedure.query(async ({ ctx }) => {
+      return getEvaluationStats(ctx.user.id, ctx.user.clinicId ?? null);
     }),
   }),
 

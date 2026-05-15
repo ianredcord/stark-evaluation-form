@@ -236,6 +236,19 @@
 - [x] 修復 Home 連到 /evaluations 但路由不存在的 bug
 - [x] 新增 Evaluations.tsx 評估歷史列表頁（搜尋、瀏覽次數、同診所徽章、快速複製分享連結）
 
+## 新增頁面（一次補完 6 頁）
+- [x] `server/db.ts` 加 `getEvaluationStats()` 彙整：總數、已分享、總瀏覽、本月、近 7 日、最近 5 筆
+- [x] `server/routers.ts` 加 `stats.overview` query 與 `auth.updateProfile` mutation
+- [x] `/account` 帳號設定頁：顯示名稱可編輯、診所識別、4 格使用統計、登出
+- [x] `/dashboard` 治療師儀表板：4 大統計卡 + 近 7 日柱狀圖（recharts）+ 最近 5 筆評估
+- [x] `/privacy` 隱私權政策（7 節：蒐集/用途/儲存/保留/第三方/權利/聯絡）
+- [x] `/terms` 服務條款（9 節，含醫療免責聲明）
+- [x] `/report/:shareCode` 列印支援：加列印按鈕、@media print CSS、列印用 header
+- [x] OnboardingBanner 新手引導：3 步流程（建範本 → 開評估 → 分享），完成自動隱藏
+- [x] NotFound 重做：橘色主題、3 個快速導航連結、顯示無效路徑
+- [x] Home 接所有新頁：footer 加隱私/條款、加儀表板/帳號設定入口
+- [x] 11/11 路由 smoke test 全綠
+
 ## 測試補完
 - [x] 新增 `server/report.test.ts`：7 個測試（getByShareCode 過濾欄位、view count、shareCode 驗證、generateShareLink 冪等與權限）
 - [x] 全套測試 27/27 通過

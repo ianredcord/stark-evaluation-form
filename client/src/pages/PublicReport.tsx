@@ -2,7 +2,7 @@
 // 無需登入,僅以 shareCode 取得部分評估資料,行動裝置優先設計
 
 import { useParams } from "wouter";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Printer } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { RiskRing } from "@/components/PublicReport/RiskRing";
 import { ImbalanceCard } from "@/components/PublicReport/ImbalanceCard";
@@ -61,25 +61,57 @@ export default function PublicReport() {
   );
 
   return (
-    <div className="min-h-screen bg-stark-bg">
+    <div className="min-h-screen bg-stark-bg print:bg-white">
+      {/* 列印用全域樣式 */}
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 12mm; }
+          html, body { background: white !important; }
+          .no-print { display: none !important; }
+          .print-page-break { page-break-before: always; }
+          /* 卡片邊框淡化、避免列印過重 */
+          .print-soft-border { border-color: #ddd !important; box-shadow: none !important; }
+          /* 環形圖等 SVG 容器避免被切 */
+          svg { page-break-inside: avoid; }
+        }
+      `}</style>
       {/* Header — 行動優先 */}
-      <header className="bg-white border-b-2 border-stark-border">
+      <header className="bg-white border-b-2 border-stark-border no-print">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <img
             src="/stark-logo.webp"
             alt="史塔克 STARK WORKS"
             className="h-10 w-auto"
           />
-          <div className="text-right">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Personal Report
-            </div>
-            <div className="text-xs text-stark-text font-medium">
-              {data.date ?? ""}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-stark-border bg-white text-stark-text text-xs hover:bg-stark-bg transition-colors"
+              title="列印或儲存為 PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>列印</span>
+            </button>
+            <div className="text-right">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                Personal Report
+              </div>
+              <div className="text-xs text-stark-text font-medium">
+                {data.date ?? ""}
+              </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* 列印用 header(畫面隱藏) */}
+      <div className="hidden print:flex print:items-center print:justify-between print:mb-4 print:pb-3 print:border-b print:border-stark-border">
+        <img src="/stark-logo.webp" alt="史塔克" className="h-10 w-auto" />
+        <div className="text-right text-sm text-stark-text">
+          <div className="font-semibold">客戶評估報告</div>
+          <div className="text-xs text-muted-foreground">{data.date ?? ""}</div>
+        </div>
+      </div>
 
       <main className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
         {/* Hero */}

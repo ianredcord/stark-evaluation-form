@@ -1,52 +1,90 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Home } from "lucide-react";
-import { useLocation } from "wouter";
+import { Home, ClipboardList, FileText, LayoutTemplate } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 export default function NotFound() {
-  const [, setLocation] = useLocation();
-
-  const handleGoHome = () => {
-    setLocation("/");
-  };
+  const [path] = useLocation();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <Card className="w-full max-w-lg mx-4 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse" />
-              <AlertCircle className="relative h-16 w-16 text-red-500" />
-            </div>
-          </div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-stark-bg via-background to-stark-bg-card p-4">
+      <Card className="w-full max-w-lg shadow-lg border-2 border-stark-border">
+        <CardContent className="pt-8 pb-8 px-6 text-center">
+          <Link href="/">
+            <img
+              src="/stark-logo.webp"
+              alt="史塔克 STARK WORKS"
+              className="h-16 w-auto mx-auto mb-6 cursor-pointer"
+            />
+          </Link>
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
+          <div className="text-6xl font-bold text-stark-orange mb-2">404</div>
 
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
-            Page Not Found
-          </h2>
+          <h1 className="text-xl font-semibold text-stark-text mb-2">
+            找不到這個頁面
+          </h1>
 
-          <p className="text-slate-600 mb-8 leading-relaxed">
-            Sorry, the page you are looking for doesn't exist.
-            <br />
-            It may have been moved or deleted.
+          <p className="text-sm text-muted-foreground mb-1">
+            您要找的頁面可能已搬移或不存在。
           </p>
+          {path && (
+            <p className="text-xs text-muted-foreground font-mono break-all mb-6">
+              {path}
+            </p>
+          )}
 
-          <div
-            id="not-found-button-group"
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
-            <Button
-              onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Go Home
+          <Link href="/">
+            <Button className="bg-stark-orange hover:bg-stark-orange-dark text-white gap-2 mb-6">
+              <Home className="w-4 h-4" />
+              回到首頁
             </Button>
+          </Link>
+
+          <div className="border-t border-stark-border pt-4">
+            <p className="text-xs text-muted-foreground mb-3">或直接前往:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <QuickLink
+                href="/evaluation/new"
+                icon={<ClipboardList className="w-3.5 h-3.5" />}
+                label="新評估"
+              />
+              <QuickLink
+                href="/evaluations"
+                icon={<FileText className="w-3.5 h-3.5" />}
+                label="評估紀錄"
+              />
+              <QuickLink
+                href="/templates"
+                icon={<LayoutTemplate className="w-3.5 h-3.5" />}
+                label="範本管理"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function QuickLink({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <Link href={href}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 text-xs border-stark-border hover:bg-stark-bg"
+      >
+        {icon}
+        {label}
+      </Button>
+    </Link>
   );
 }
