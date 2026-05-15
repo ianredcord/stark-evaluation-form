@@ -176,7 +176,12 @@ import { ScoreRing } from "@/components/atoms/ScoreRing";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { SectionNumber } from "@/components/atoms/SectionNumber";
 import { IconBadge } from "@/components/atoms/IconBadge";
-import { Activity, Heart, Target, TrendingUp } from "lucide-react";
+import { ChipToggle } from "@/components/atoms/ChipToggle";
+import { ProgressBar } from "@/components/atoms/ProgressBar";
+import { DataLabelValue } from "@/components/atoms/DataLabelValue";
+import { EditableLabel } from "@/components/atoms/EditableLabel";
+import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
+import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope } from "lucide-react";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -191,6 +196,15 @@ export default function ComponentsShowcase() {
   const [selectedYear, setSelectedYear] = useState("");
   const [dialogInput, setDialogInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Day 3 atoms demo state
+  const [chips, setChips] = useState({
+    training: true,
+    therapy: false,
+    redcord: true,
+    home: false,
+  });
+  const [editableText, setEditableText] = useState("陳小妍 — 下背疼痛 + 核心無力");
 
   // AI ChatBox demo state
   const [chatMessages, setChatMessages] = useState<Message[]>([
@@ -325,6 +339,127 @@ export default function ComponentsShowcase() {
                 <IconBadge icon={<AlertCircle />} bg="warn" size="md" />
                 <IconBadge icon={<X />} bg="danger" size="md" />
                 <IconBadge icon={<Heart />} bg="primary" size="xl" shape="rounded" />
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 3 — Atoms Part 2 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Atoms — Part 2 (Week 1 Day 3)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ChipToggle</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <ChipToggle
+                  selected={chips.training}
+                  onToggle={(v) => setChips((c) => ({ ...c, training: v }))}
+                  icon={<Dumbbell />}
+                >
+                  訓練
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.therapy}
+                  onToggle={(v) => setChips((c) => ({ ...c, therapy: v }))}
+                  icon={<Stethoscope />}
+                >
+                  治療
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.redcord}
+                  onToggle={(v) => setChips((c) => ({ ...c, redcord: v }))}
+                >
+                  Redcord
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.home}
+                  onToggle={(v) => setChips((c) => ({ ...c, home: v }))}
+                  size="sm"
+                >
+                  居家運動 (sm)
+                </ChipToggle>
+                <ChipToggle selected={false} onToggle={() => {}} disabled>
+                  disabled
+                </ChipToggle>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ProgressBar</h3>
+              <div className="max-w-md space-y-3">
+                <ProgressBar value={68} />
+                <ProgressBar value={92} color="good" />
+                <ProgressBar value={55} color="warn" size="lg" />
+                <ProgressBar value={22} color="danger" size="sm" />
+                <ProgressBar value={3} max={5} segments={5} color="accent" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">DataLabelValue</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 max-w-xl bg-card border rounded-lg p-4">
+                <DataLabelValue label="姓名" value="陳小妍" />
+                <DataLabelValue label="年齡 / 性別" value="24 歲 · 女性" />
+                <DataLabelValue label="身高" value="158 cm" emphasis="primary" />
+                <DataLabelValue label="體重" value="50 kg" emphasis="primary" />
+                <DataLabelValue
+                  label="整體分數"
+                  value="68 / 100"
+                  suffix={<StatusPill status="warn" size="sm">中等</StatusPill>}
+                />
+                <DataLabelValue
+                  layout="stack"
+                  label="主訴"
+                  value="下背痠痛、頸部緊繃"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">EditableLabel</h3>
+              <div className="max-w-md space-y-2">
+                <EditableLabel value={editableText} onChange={setEditableText} />
+                <p className="text-xs text-muted-foreground">
+                  按 Enter 儲存,Esc 取消,點外面也會儲存
+                </p>
+                <EditableLabel
+                  value=""
+                  onChange={() => {}}
+                  placeholder="點擊輸入備註..."
+                />
+                <EditableLabel value="不可編輯" onChange={() => {}} disabled />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">BodyOutlineSimple</h3>
+              <div className="flex items-end gap-6 flex-wrap">
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="sm" />
+                  <span className="text-xs text-muted-foreground">sm front</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="md" />
+                  <span className="text-xs text-muted-foreground">md front</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="md" view="back" />
+                  <span className="text-xs text-muted-foreground">md back</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple
+                    size="lg"
+                    hotspots={[
+                      { x: 0.5, y: 0.1, color: "danger" },
+                      { x: 0.5, y: 0.22, color: "danger", r: 5 },
+                      { x: 0.5, y: 0.45, color: "warn" },
+                      { x: 0.45, y: 0.6, color: "warn", r: 5 },
+                      { x: 0.6, y: 0.72, color: "danger" },
+                    ]}
+                  />
+                  <span className="text-xs text-muted-foreground">lg + 5 hotspots</span>
+                </div>
               </div>
             </div>
           </section>
