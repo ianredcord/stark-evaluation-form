@@ -43,6 +43,13 @@
       "when": 1778835733921,
       "tag": "0005_even_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1778837150324,
+      "tag": "0006_yellow_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

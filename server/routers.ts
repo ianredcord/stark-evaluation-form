@@ -9,8 +9,11 @@ import { z } from "zod";
 import {
   createEvaluation,
   getEvaluationById,
+  getEvaluationByShareCode,
   getEvaluationsByUserId,
   updateEvaluation,
+  setShareCode,
+  incrementViewCount,
   deleteEvaluation,
   createTemplate,
   getTemplateById,
@@ -179,9 +182,56 @@ export const appRouter = router({
         if (!existing || (existing.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
           return { success: false, error: "評估表不存在或無權限" };
         }
-        
+
         const success = await deleteEvaluation(input.id);
         return { success };
+      }),
+
+    // 產生或取得分享連結代碼(冪等)
+    generateShareLink: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getEvaluationById(input.id);
+        if (
+          !existing ||
+          (existing.userId !== ctx.user.id && ctx.user.role !== "admin")
+        ) {
+          return { success: false as const, error: "評估表不存在或無權限" };
+        }
+        if (existing.shareCode) {
+          return { success: true as const, shareCode: existing.shareCode };
+        }
+        const code = nanoid(20);
+        const ok = await setShareCode(input.id, code);
+        if (!ok) return { success: false as const, error: "建立失敗" };
+        return { success: true as const, shareCode: code };
+      }),
+  }),
+
+  // 客戶端公開報告 API(無認證,以 shareCode 存取)
+  report: router({
+    getByShareCode: publicProcedure
+      .input(z.object({ shareCode: z.string().min(8).max(32) }))
+      .query(async ({ input }) => {
+        const evaluation = await getEvaluationByShareCode(input.shareCode);
+        if (!evaluation) return null;
+
+        // 非同步計數,不阻塞回應
+        void incrementViewCount(evaluation.id);
+
+        // 過濾敏感欄位:不回傳治療師備註、簽名圖、原始症狀文字等
+        // 客戶端報告以 Moti 失衡數值 + 處方建議為主
+        return {
+          id: evaluation.id,
+          date: evaluation.date,
+          clientName: evaluation.clientName,
+          motiPhysioPage1: evaluation.motiPhysioPage1,
+          motiPhysioPage2: evaluation.motiPhysioPage2,
+          motiRiskValues: evaluation.motiRiskValues,
+          prescriptions: (evaluation as { prescriptions?: unknown })
+            .prescriptions,
+          sharedAt: evaluation.sharedAt,
+        };
       }),
   }),
 

@@ -213,3 +213,19 @@
 - [x] Task 04：EvaluationForm.tsx save/load mapping 含 prescriptions
 - [ ] Task 04：實機驗收 — 完整跑 1 份 Page 1-8 評估，重新整理勾選還在
 - [ ] 處方知識庫補完其他 8 項失衡（Phase 2）
+
+## SaaS Week 2：客戶端線上互動報告（Task 05-08）
+- [x] Task 05：`drizzle/schema.ts` 加 `shareCode/sharedAt/viewCount` 欄 + migration 0006
+- [x] Task 05：`server/db.ts` 加 `getEvaluationByShareCode/setShareCode/incrementViewCount`
+- [x] Task 05：`server/routers.ts` 新增 `report.getByShareCode` publicProcedure（過濾敏感欄位）
+- [x] Task 05：`server/routers.ts` 新增 `evaluation.generateShareLink` mutation
+- [x] Task 05：`/report/:shareCode` 路由與 PublicReport.tsx
+- [x] Task 05：治療師端 EvaluationForm 加「分享連結」按鈕（複製到剪貼簿）
+- [x] Task 06：RiskRing 環形進度條（整體失衡風險指數）
+- [x] Task 06：ImbalanceCard 12 項失衡卡片（進度條、等級徽章、可展開「為什麼/影響」）
+- [x] Task 06：BodyMap 簡化人體圖（前/側/背三視圖 + 紅點標記）
+- [x] Task 07：PrescriptionTabs 處方四欄分頁（筋膜/穴位/運動/儀器）
+- [x] Task 08：手機優先響應式設計 + 史塔克 logo + 橘色主題
+- [x] Task 08：頁腳 "Powered by Stark Evaluation"
+- [ ] Task 05：實機驗收 — 治療師複製連結，無痕視窗用手機瀏覽器看
+- [ ] 客戶端文案微調（目前 explanation 為合理 placeholder,Ian 可覆蓋）

@@ -11,7 +11,7 @@ import { Page6Ronfic } from "@/components/pages/Page6Ronfic";
 import { Page7TrainingPlan } from "@/components/pages/Page7TrainingPlan";
 import { Page8Prescription } from "@/components/pages/Page8Prescription";
 import { DateInput } from "@/components/FormFields";
-import { FileDown, Save, Loader2, LayoutTemplate } from "lucide-react";
+import { FileDown, Save, Loader2, LayoutTemplate, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -53,6 +53,7 @@ function EvaluationFormContent() {
   const createMutation = trpc.evaluation.create.useMutation();
   const updateMutation = trpc.evaluation.update.useMutation();
   const pdfMutation = trpc.pdf.generate.useMutation();
+  const shareLinkMutation = trpc.evaluation.generateShareLink.useMutation();
 
   // 範本相關
   const { data: templates } = trpc.template.list.useQuery();
@@ -249,6 +250,25 @@ function EvaluationFormContent() {
     }
   };
 
+  const handleCopyShareLink = async () => {
+    if (!evaluationId) {
+      toast.error("請先儲存評估表");
+      return;
+    }
+    try {
+      const result = await shareLinkMutation.mutateAsync({ id: evaluationId });
+      if (!result.success || !("shareCode" in result)) {
+        toast.error(("error" in result && result.error) || "建立失敗");
+        return;
+      }
+      const url = `${window.location.origin}/report/${result.shareCode}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("已複製客戶分享連結");
+    } catch {
+      toast.error("複製失敗");
+    }
+  };
+
   const handleExportPDF = async () => {
     if (!evaluationId) {
       toast.error("請先儲存評估表再匯出 PDF");
@@ -434,6 +454,19 @@ function EvaluationFormContent() {
                   </div>
                 </DialogContent>
               </Dialog>
+              <button
+                onClick={handleCopyShareLink}
+                disabled={!evaluationId || shareLinkMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-stark-border bg-white text-stark-text hover:bg-stark-bg transition-colors disabled:opacity-50"
+                title="複製客戶端報告連結"
+              >
+                {shareLinkMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">分享連結</span>
+              </button>
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting || !evaluationId}

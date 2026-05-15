@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -171,6 +171,64 @@ export async function updateEvaluation(
   } catch (error) {
     console.error("[Database] Failed to update evaluation:", error);
     throw error;
+  }
+}
+
+/**
+ * 以 shareCode 取得評估表(供客戶端公開報告使用,不含敏感欄位過濾)
+ */
+export async function getEvaluationByShareCode(
+  shareCode: string,
+): Promise<Evaluation | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db
+      .select()
+      .from(evaluations)
+      .where(eq(evaluations.shareCode, shareCode))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get evaluation by shareCode:", error);
+    return null;
+  }
+}
+
+/**
+ * 為評估表建立(或回傳既有)分享代碼
+ */
+export async function setShareCode(
+  id: number,
+  shareCode: string,
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db
+      .update(evaluations)
+      .set({ shareCode, sharedAt: new Date() })
+      .where(eq(evaluations.id, id));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to set shareCode:", error);
+    return false;
+  }
+}
+
+/**
+ * 客戶端訪問計數+1
+ */
+export async function incrementViewCount(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  try {
+    await db
+      .update(evaluations)
+      .set({ viewCount: sql`${evaluations.viewCount} + 1` })
+      .where(eq(evaluations.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to increment viewCount:", error);
   }
 }
 

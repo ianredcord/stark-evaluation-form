@@ -89,7 +89,12 @@ export const evaluations = mysqlTable("evaluations", {
   // 簽名（Data URL 或 S3 URL;SignaturePad 產生的 base64 通常 500KB+,需 longtext)
   clientSignature: longtext("clientSignature"),
   coachSignature: longtext("coachSignature"),
-  
+
+  // 客戶端公開分享連結（Week 2 SaaS 轉型）
+  shareCode: varchar("shareCode", { length: 32 }),
+  sharedAt: timestamp("sharedAt"),
+  viewCount: int("viewCount").default(0).notNull(),
+
   // 時間戳記
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
