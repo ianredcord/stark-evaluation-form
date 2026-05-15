@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import EvaluationForm from "./pages/EvaluationForm";
 import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
+import ComponentShowcase from "./pages/ComponentShowcase";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/evaluation/:id" component={EvaluationForm} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
+      <Route path="/components" component={ComponentShowcase} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
