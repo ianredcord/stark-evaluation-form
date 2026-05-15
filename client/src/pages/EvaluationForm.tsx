@@ -404,7 +404,7 @@ function EvaluationFormContent() {
             </div>
 
             {/* 操作按鈕 */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {/* 套用範本按鈕 */}
               <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
                 <DialogTrigger asChild>

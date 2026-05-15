@@ -62,7 +62,7 @@
 ## 測試與優化
 - [x] 表單驗證測試
 - [x] PDF 輸出測試
-- [ ] 響應式設計優化
+- [x] 響應式設計優化（EvaluationForm header flex-wrap、FormNavigation 8 步圓點手機隱藏標籤、Page 1/3/5 已使用 grid-cols-1 sm: 與 overflow-x-auto）
 
 ## 範本功能
 - [x] 範本資料庫 Schema 設計

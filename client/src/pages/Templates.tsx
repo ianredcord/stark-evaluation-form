@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { FileText, Loader2, Plus, Trash2, Edit, Copy } from "lucide-react";
+import { FileText, Loader2, Plus, Trash2, Edit, Copy, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -229,11 +229,20 @@ export default function Templates() {
           </div>
         ) : templates && templates.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templates.map((template) => (
+            {templates.map((template) => {
+              const isShared =
+                user?.id !== undefined && template.userId !== user.id;
+              return (
               <Card key={template.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center justify-between gap-2">
                     <span className="truncate">{template.name}</span>
+                    {isShared && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stark-orange/10 text-stark-orange shrink-0">
+                        <Users className="w-3 h-3" />
+                        同診所
+                      </span>
+                    )}
                   </CardTitle>
                   {template.description && (
                     <CardDescription className="line-clamp-2">
@@ -273,7 +282,8 @@ export default function Templates() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <Card className="text-center py-12">

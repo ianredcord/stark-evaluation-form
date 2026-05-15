@@ -28,9 +28,9 @@ export function FormNavigation({
   completedPages = [],
 }: FormNavigationProps) {
   return (
-    <div className="w-full py-4">
+    <div className="w-full py-3 sm:py-4">
       {/* 進度條 */}
-      <div className="relative mb-6">
+      <div className="relative mb-3 sm:mb-6">
         <div className="absolute top-4 left-0 right-0 h-1 bg-muted rounded-full" />
         <div
           className="absolute top-4 left-0 h-1 bg-stark-orange rounded-full transition-all duration-300"
@@ -71,7 +71,7 @@ export function FormNavigation({
                 </div>
                 <span
                   className={cn(
-                    "text-xs text-center max-w-16 leading-tight transition-colors",
+                    "text-[10px] sm:text-xs text-center max-w-12 sm:max-w-16 leading-tight transition-colors hidden sm:block",
                     isCurrent ? "text-stark-orange font-medium" : "text-muted-foreground",
                     "group-hover:text-stark-orange"
                   )}
