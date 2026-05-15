@@ -9,6 +9,7 @@ import { WeekPlanCard } from "@/components/molecules/WeekPlanCard";
 import { KeyFindingRow } from "@/components/molecules/KeyFindingRow";
 import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard";
 import { SectionNumber } from "@/components/atoms/SectionNumber";
+import { EvaluationDrawer, type DrawerTabKey } from "@/components/organisms/EvaluationDrawer";
 import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
 import { ChipToggle } from "@/components/atoms/ChipToggle";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   RotateCw,
   Scale,
   Activity,
+  Pencil,
 } from "lucide-react";
 import {
   demoClient,
@@ -94,6 +96,13 @@ export default function IntegratedAssessmentPage() {
     demoReportSummary.plainExplanation
   );
   const [reportNotes, setReportNotes] = useState(demoReportSummary.notes);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<DrawerTabKey>("basic");
+
+  const openDrawer = (tab: DrawerTabKey) => {
+    setDrawerTab(tab);
+    setDrawerOpen(true);
+  };
 
   return (
     <TherapistLayout activeKey="integrated">
@@ -104,7 +113,7 @@ export default function IntegratedAssessmentPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onBack={() => window.history.back()}
-        onImport={() => alert("Import dialog — Week 4 才接 tRPC")}
+        onImport={() => openDrawer("basic")}
       />
 
       <div className="flex">
@@ -124,7 +133,11 @@ export default function IntegratedAssessmentPage() {
           ) : (
             <>
               {/* ① 主訴 / 症狀 */}
-              <SectionCard n={1} title="本次主訴 / 症狀">
+              <SectionCard
+                n={1}
+                title="本次主訴 / 症狀"
+                onEdit={() => openDrawer("basic")}
+              >
                 <dl className="grid grid-cols-1 gap-y-2.5">
                   {COMPLAINT_ROWS.map((r) => (
                     <div key={r.key} className="grid grid-cols-[120px_1fr] gap-3">
@@ -140,7 +153,11 @@ export default function IntegratedAssessmentPage() {
               </SectionCard>
 
               {/* ② 資料來源整合 */}
-              <SectionCard n={2} title="資料來源整合">
+              <SectionCard
+                n={2}
+                title="資料來源整合"
+                onEdit={() => openDrawer("body-comp")}
+              >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {demoDataSources.map((s) => (
                     <SystemImportCard
@@ -157,7 +174,11 @@ export default function IntegratedAssessmentPage() {
               </SectionCard>
 
               {/* ③ 姿勢重點判讀 */}
-              <SectionCard n={3} title="姿勢重點判讀">
+              <SectionCard
+                n={3}
+                title="姿勢重點判讀"
+                onEdit={() => openDrawer("posture")}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
                   <div className="flex gap-4 justify-center">
                     <div className="flex flex-col items-center gap-1">
@@ -198,7 +219,11 @@ export default function IntegratedAssessmentPage() {
               </SectionCard>
 
               {/* ④ 功能與控制問題 */}
-              <SectionCard n={4} title="功能與控制問題">
+              <SectionCard
+                n={4}
+                title="功能與控制問題"
+                onEdit={() => openDrawer("functional")}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {demoFunctionalIssues.map((issue) => (
                     <div
@@ -328,7 +353,11 @@ export default function IntegratedAssessmentPage() {
               </SectionCard>
 
               {/* ⑧ 4 週計畫草案 */}
-              <SectionCard n={8} title="4 週計畫草案">
+              <SectionCard
+                n={8}
+                title="4 週計畫草案"
+                onEdit={() => openDrawer("training")}
+              >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {demoWeekPlan.map((wp, i) => (
                     <WeekPlanCard
@@ -381,6 +410,12 @@ export default function IntegratedAssessmentPage() {
           onRefreshPreview={() => alert("Refresh — 預覽即時更新")}
         />
       </div>
+
+      <EvaluationDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        initialTab={drawerTab}
+      />
     </TherapistLayout>
   );
 }
@@ -397,11 +432,13 @@ function SectionCard({
   n,
   title,
   titleSuffix,
+  onEdit,
   children,
 }: {
   n: number;
   title: string;
   titleSuffix?: React.ReactNode;
+  onEdit?: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -410,6 +447,16 @@ function SectionCard({
         <SectionNumber n={n} size="md" />
         <h2 className="font-display text-base font-semibold">{title}</h2>
         {titleSuffix}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground rounded-md px-2 py-1 hover:bg-muted"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            編輯
+          </button>
+        )}
       </header>
       {children}
     </section>
