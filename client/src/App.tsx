@@ -9,6 +9,7 @@ import EvaluationForm from "./pages/EvaluationForm";
 import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
 import ComponentShowcase from "./pages/ComponentShowcase";
+import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/components" component={ComponentShowcase} />
+      <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
