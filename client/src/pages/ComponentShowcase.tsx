@@ -172,6 +172,11 @@ import {
 import { useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
+import { ScoreRing } from "@/components/atoms/ScoreRing";
+import { StatusPill } from "@/components/atoms/StatusPill";
+import { SectionNumber } from "@/components/atoms/SectionNumber";
+import { IconBadge } from "@/components/atoms/IconBadge";
+import { Activity, Heart, Target, TrendingUp } from "lucide-react";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -259,6 +264,69 @@ export default function ComponentsShowcase() {
             <p className="font-body text-sm text-muted-foreground">
               font-body / Inter — 中文 fallback Noto Sans TC
             </p>
+          </section>
+
+          {/* Week 1 Day 2 — Atoms Part 1 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Atoms — Part 1 (Week 1 Day 2)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ScoreRing</h3>
+              <div className="flex items-end gap-6 flex-wrap">
+                <ScoreRing value={68} size="sm" label="sm" />
+                <ScoreRing value={68} size="md" label="md" />
+                <ScoreRing value={68} size="lg" label="lg" color="accent" />
+                <ScoreRing value={68} size="xl" label="xl / primary" />
+                <ScoreRing value={92} size="md" color="good" label="good" />
+                <ScoreRing value={55} size="md" color="warn" label="warn" />
+                <ScoreRing value={22} size="md" color="danger" label="danger" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">StatusPill</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <StatusPill status="good">正常</StatusPill>
+                <StatusPill status="warn">注意</StatusPill>
+                <StatusPill status="danger">嚴重</StatusPill>
+                <StatusPill status="neutral">待評估</StatusPill>
+                <StatusPill status="good" size="sm">sm</StatusPill>
+                <StatusPill status="warn" size="md">md</StatusPill>
+                <StatusPill status="danger" size="lg">lg</StatusPill>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SectionNumber</h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                <SectionNumber n={1} />
+                <SectionNumber n={2} color="accent" />
+                <SectionNumber n={3} color="good" />
+                <SectionNumber n={4} color="warn" />
+                <SectionNumber n={5} color="danger" />
+                <SectionNumber n={6} variant="outline" />
+                <SectionNumber n={7} variant="outline" color="accent" />
+                <SectionNumber n={8} size="lg" />
+                <SectionNumber n={9} size="xl" color="accent" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">IconBadge</h3>
+              <div className="flex items-end gap-3 flex-wrap">
+                <IconBadge icon={<Heart />} bg="primary" size="sm" />
+                <IconBadge icon={<Heart />} bg="primary" />
+                <IconBadge icon={<Activity />} bg="accent" size="lg" />
+                <IconBadge icon={<TrendingUp />} bg="warm" size="lg" />
+                <IconBadge icon={<Target />} bg="violet" size="lg" />
+                <IconBadge icon={<Check />} bg="good" size="md" />
+                <IconBadge icon={<AlertCircle />} bg="warn" size="md" />
+                <IconBadge icon={<X />} bg="danger" size="md" />
+                <IconBadge icon={<Heart />} bg="primary" size="xl" shape="rounded" />
+              </div>
+            </div>
           </section>
 
           {/* Text Colors Section */}
