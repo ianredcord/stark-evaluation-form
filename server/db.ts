@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -35,7 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "loginMethod", "clinicId"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -149,6 +149,60 @@ export async function getEvaluationsByUserId(userId: number): Promise<Evaluation
   } catch (error) {
     console.error("[Database] Failed to get evaluations:", error);
     throw error;
+  }
+}
+
+/**
+ * 取得使用者所屬診所的所有評估表(同 clinicId)。若 clinicId 為 null,
+ * 則 fallback 到只看自己的評估表。
+ */
+export async function getEvaluationsForClinic(
+  userId: number,
+  clinicId: string | null,
+): Promise<Evaluation[]> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const where = clinicId
+      ? or(eq(evaluations.userId, userId), eq(evaluations.clinicId, clinicId))
+      : eq(evaluations.userId, userId);
+    const result = await db
+      .select()
+      .from(evaluations)
+      .where(where)
+      .orderBy(desc(evaluations.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get clinic evaluations:", error);
+    return [];
+  }
+}
+
+/**
+ * 同診所範本(自己的 + 同 clinicId 共享的)
+ */
+export async function getTemplatesForClinic(
+  userId: number,
+  clinicId: string | null,
+): Promise<EvaluationTemplate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const where = clinicId
+      ? or(
+          eq(evaluationTemplates.userId, userId),
+          eq(evaluationTemplates.clinicId, clinicId),
+        )
+      : eq(evaluationTemplates.userId, userId);
+    const result = await db
+      .select()
+      .from(evaluationTemplates)
+      .where(where)
+      .orderBy(desc(evaluationTemplates.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get clinic templates:", error);
+    return [];
   }
 }
 

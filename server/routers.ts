@@ -10,14 +10,14 @@ import {
   createEvaluation,
   getEvaluationById,
   getEvaluationByShareCode,
-  getEvaluationsByUserId,
+  getEvaluationsForClinic,
   updateEvaluation,
   setShareCode,
   incrementViewCount,
   deleteEvaluation,
   createTemplate,
   getTemplateById,
-  getTemplatesByUserId,
+  getTemplatesForClinic,
   updateTemplate,
   deleteTemplate,
   upsertUser,
@@ -47,6 +47,7 @@ async function devAuth(ctx: TrpcContext): Promise<User | null> {
     email: "dev@local.test",
     loginMethod: "dev-bypass",
     role: "admin",
+    clinicId: process.env.OWNER_CLINIC_ID || null,
   });
   return (await getUserByOpenId(openId)) ?? null;
 }
@@ -60,6 +61,23 @@ const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   }
   return next({ ctx: { ...ctx, user } });
 });
+
+// 判斷使用者是否能存取該評估表(自己 / 同診所 / admin)
+function canAccessEvaluation(
+  evaluation: { userId: number; clinicId: string | null },
+  user: { id: number; role: string; clinicId: string | null },
+): boolean {
+  if (user.role === "admin") return true;
+  if (evaluation.userId === user.id) return true;
+  if (
+    evaluation.clinicId &&
+    user.clinicId &&
+    evaluation.clinicId === user.clinicId
+  ) {
+    return true;
+  }
+  return false;
+}
 
 // 評估表資料驗證 Schema
 const evaluationInputSchema = z.object({
@@ -132,28 +150,26 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const id = await createEvaluation({
           userId: ctx.user.id,
+          clinicId: ctx.user.clinicId ?? null,
           ...input,
         });
         return { id };
       }),
 
-    // 取得單一評估表
+    // 取得單一評估表(同診所可見)
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ ctx, input }) => {
         const evaluation = await getEvaluationById(input.id);
-        
-        // 確保只能存取自己的評估表（除非是管理員）
-        if (evaluation && evaluation.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+        if (evaluation && !canAccessEvaluation(evaluation, ctx.user)) {
           return null;
         }
-        
         return evaluation;
       }),
 
-    // 取得使用者的所有評估表
+    // 取得使用者所屬診所的評估表(同 clinicId 共享;無 clinicId 則只見自己)
     list: protectedProcedure.query(async ({ ctx }) => {
-      return getEvaluationsByUserId(ctx.user.id);
+      return getEvaluationsForClinic(ctx.user.id, ctx.user.clinicId ?? null);
     }),
 
     // 更新評估表
@@ -163,12 +179,11 @@ export const appRouter = router({
         data: evaluationInputSchema,
       }))
       .mutation(async ({ ctx, input }) => {
-        // 確認評估表存在且屬於該使用者
         const existing = await getEvaluationById(input.id);
-        if (!existing || (existing.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!existing || !canAccessEvaluation(existing, ctx.user)) {
           return { success: false, error: "評估表不存在或無權限" };
         }
-        
+
         const success = await updateEvaluation(input.id, input.data);
         return { success };
       }),
@@ -177,9 +192,8 @@ export const appRouter = router({
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        // 確認評估表存在且屬於該使用者
         const existing = await getEvaluationById(input.id);
-        if (!existing || (existing.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!existing || !canAccessEvaluation(existing, ctx.user)) {
           return { success: false, error: "評估表不存在或無權限" };
         }
 
@@ -192,10 +206,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
         const existing = await getEvaluationById(input.id);
-        if (
-          !existing ||
-          (existing.userId !== ctx.user.id && ctx.user.role !== "admin")
-        ) {
+        if (!existing || !canAccessEvaluation(existing, ctx.user)) {
           return { success: false as const, error: "評估表不存在或無權限" };
         }
         if (existing.shareCode) {
@@ -337,28 +348,26 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const id = await createTemplate({
           userId: ctx.user.id,
+          clinicId: ctx.user.clinicId ?? null,
           ...input,
         });
         return { id };
       }),
 
-    // 取得單一範本
+    // 取得單一範本(同診所可見)
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ ctx, input }) => {
         const template = await getTemplateById(input.id);
-        
-        // 確保只能存取自己的範本（除非是管理員）
-        if (template && template.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+        if (template && !canAccessEvaluation(template, ctx.user)) {
           return null;
         }
-        
         return template;
       }),
 
-    // 取得使用者的所有範本
+    // 取得使用者所屬診所的範本
     list: protectedProcedure.query(async ({ ctx }) => {
-      return getTemplatesByUserId(ctx.user.id);
+      return getTemplatesForClinic(ctx.user.id, ctx.user.clinicId ?? null);
     }),
 
     // 更新範本
@@ -374,12 +383,11 @@ export const appRouter = router({
         }),
       }))
       .mutation(async ({ ctx, input }) => {
-        // 確認範本存在且屬於該使用者
         const existing = await getTemplateById(input.id);
-        if (!existing || (existing.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!existing || !canAccessEvaluation(existing, ctx.user)) {
           return { success: false, error: "範本不存在或無權限" };
         }
-        
+
         const success = await updateTemplate(input.id, input.data);
         return { success };
       }),
@@ -388,12 +396,11 @@ export const appRouter = router({
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        // 確認範本存在且屬於該使用者
         const existing = await getTemplateById(input.id);
-        if (!existing || (existing.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!existing || !canAccessEvaluation(existing, ctx.user)) {
           return { success: false, error: "範本不存在或無權限" };
         }
-        
+
         const success = await deleteTemplate(input.id);
         return { success };
       }),
@@ -406,28 +413,21 @@ export const appRouter = router({
         description: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // 取得評估表資料
         const evaluation = await getEvaluationById(input.evaluationId);
-        
-        if (!evaluation) {
-          return { success: false, error: "評估表不存在" };
-        }
-        
-        // 確認權限
-        if (evaluation.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+        if (!evaluation || !canAccessEvaluation(evaluation, ctx.user)) {
           return { success: false, error: "無權限存取此評估表" };
         }
-        
-        // 建立範本
+
         const id = await createTemplate({
           userId: ctx.user.id,
+          clinicId: ctx.user.clinicId ?? null,
           name: input.name,
           description: input.description,
           functionalMovement: evaluation.functionalMovement,
           redcordAssessment: evaluation.redcordAssessment,
           trainingPlans: evaluation.trainingPlans,
         });
-        
+
         return { success: true, id };
       }),
   }),

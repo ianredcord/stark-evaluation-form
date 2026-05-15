@@ -214,6 +214,17 @@
 - [ ] Task 04：實機驗收 — 完整跑 1 份 Page 1-8 評估，重新整理勾選還在
 - [ ] 處方知識庫補完其他 8 項失衡（Phase 2）
 
+## SaaS Week 4：多診所隔離（Task 13）
+- [x] `users` / `evaluations` / `evaluationTemplates` 加 `clinicId varchar(64)` 欄（migration 0007）
+- [x] `db.ts` 加 `getEvaluationsForClinic` / `getTemplatesForClinic`（自己 ∪ 同診所）
+- [x] `routers.ts` 抽出 `canAccessEvaluation()` 共用權限檢查（owner / 同診所 / admin）
+- [x] evaluation/template 的 list/get/update/delete/createFromEvaluation 全面切到診所視野
+- [x] create 時自動帶上 `ctx.user.clinicId`
+- [x] dev bypass 支援 `OWNER_CLINIC_ID` 環境變數
+- [x] `upsertUser` 同步寫入 clinicId
+- [x] 更新測試 mock（`getEvaluationsForClinic`、user.clinicId）
+- [ ] 實機驗收 — 兩位使用者設同 clinicId 應互看評估，不同則隔離
+
 ## SaaS Week 2：客戶端線上互動報告（Task 05-08）
 - [x] Task 05：`drizzle/schema.ts` 加 `shareCode/sharedAt/viewCount` 欄 + migration 0006
 - [x] Task 05：`server/db.ts` 加 `getEvaluationByShareCode/setShareCode/incrementViewCount`

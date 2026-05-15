@@ -10,6 +10,8 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  // 最小版多診所隔離(Week 4):同一診所共用 clinicId
+  clinicId: varchar("clinicId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -26,7 +28,10 @@ export const evaluations = mysqlTable("evaluations", {
   
   // 關聯使用者
   userId: int("userId").notNull(),
-  
+
+  // 診所隔離(同 clinicId 的治療師可互相看到評估)
+  clinicId: varchar("clinicId", { length: 64 }),
+
   // 基本資料
   date: varchar("date", { length: 20 }),
   clientName: varchar("clientName", { length: 100 }),
@@ -108,9 +113,12 @@ export type InsertEvaluation = typeof evaluations.$inferInsert;
  */
 export const evaluationTemplates = mysqlTable("evaluationTemplates", {
   id: int("id").autoincrement().primaryKey(),
-  
+
   // 關聯使用者（建立者）
   userId: int("userId").notNull(),
+
+  // 診所隔離(範本可在診所內共享)
+  clinicId: varchar("clinicId", { length: 64 }),
   
   // 範本基本資訊
   name: varchar("name", { length: 100 }).notNull(),
