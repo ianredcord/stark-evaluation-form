@@ -8,15 +8,30 @@ import Home from "./pages/Home";
 import EvaluationForm from "./pages/EvaluationForm";
 import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
+import ComponentShowcase from "./pages/ComponentShowcase";
+import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
+import ClientDetailPage from "./pages/ClientDetailPage";
+import Login from "./pages/Login";
+import ClientReportPage from "./pages/ClientReportPage";
+import PrescriptionsAdmin from "./pages/PrescriptionsAdmin";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/clients" component={Home} />
+      <Route path="/settings" component={Settings} />
       <Route path="/evaluation/new" component={EvaluationForm} />
       <Route path="/evaluation/:id" component={EvaluationForm} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
+      <Route path="/components" component={ComponentShowcase} />
+      <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
+      <Route path="/clients/:id" component={ClientDetailPage} />
+      <Route path="/auth/login" component={Login} />
+      <Route path="/r/:shareCode" component={ClientReportPage} />
+      <Route path="/prescriptions" component={PrescriptionsAdmin} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

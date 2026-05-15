@@ -88,6 +88,34 @@
   --color-stark-text: var(--stark-text);
   --color-stark-text-muted: var(--stark-text-muted);
 
+  /* === 新 SaaS UI 品牌色(Week 1 起,逐步取代 stark-orange) === */
+  --color-brand-primary: #1A2B4A;          /* 深靛藍 - 治療師端主色 */
+  --color-brand-primary-light: #2D4373;
+  --color-brand-primary-dark: #0F1A30;
+  --color-brand-accent: #00B4D8;           /* 藍綠 - 強調色 */
+
+  /* === 客戶端輔助色 === */
+  --color-client-warm: #FAF7F2;            /* 米色背景 - 客戶端 */
+  --color-client-violet: #7C3AED;          /* 客戶流程紫(流程圖用)*/
+
+  /* === 語義色(狀態)=== */
+  --color-status-good: #4CAF82;            /* 正常 / 良好 */
+  --color-status-good-bg: #E8F5E9;
+  --color-status-warn: #F59E0B;            /* 注意 / 中等 */
+  --color-status-warn-bg: #FEF3C7;
+  --color-status-danger: #EF4444;          /* 危險 / 嚴重 */
+  --color-status-danger-bg: #FEE2E2;
+
+  /* === 中性色補充(shadcn 已蓋 background/foreground,這些是額外場景)=== */
+  --color-bg-page: #F9FAFB;
+  --color-bg-subtle: #F3F4F6;
+  --color-border-strong: #D1D5DB;
+  --color-text-tertiary: #9CA3AF;
+
+  /* === 字體(新增,Geist 透過 --font-sans 保留)=== */
+  --font-display: "Plus Jakarta Sans", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

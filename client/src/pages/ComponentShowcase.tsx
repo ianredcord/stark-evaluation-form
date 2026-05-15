@@ -172,6 +172,24 @@ import {
 import { useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
+import { ScoreRing } from "@/components/atoms/ScoreRing";
+import { StatusPill } from "@/components/atoms/StatusPill";
+import { SectionNumber } from "@/components/atoms/SectionNumber";
+import { IconBadge } from "@/components/atoms/IconBadge";
+import { ChipToggle } from "@/components/atoms/ChipToggle";
+import { ProgressBar } from "@/components/atoms/ProgressBar";
+import { DataLabelValue } from "@/components/atoms/DataLabelValue";
+import { EditableLabel } from "@/components/atoms/EditableLabel";
+import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
+import { ScoreCard } from "@/components/molecules/ScoreCard";
+import { SubScoreCard } from "@/components/molecules/SubScoreCard";
+import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard";
+import { StatusListItem } from "@/components/molecules/StatusListItem";
+import { SystemImportCard } from "@/components/molecules/SystemImportCard";
+import { WeekPlanCard } from "@/components/molecules/WeekPlanCard";
+import { KeyFindingRow } from "@/components/molecules/KeyFindingRow";
+import { ActionRecommendationCard } from "@/components/molecules/ActionRecommendationCard";
+import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope, Bone, Brain, Scale, AlertTriangle, CalendarCheck, HandHeart } from "lucide-react";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -186,6 +204,15 @@ export default function ComponentsShowcase() {
   const [selectedYear, setSelectedYear] = useState("");
   const [dialogInput, setDialogInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Day 3 atoms demo state
+  const [chips, setChips] = useState({
+    training: true,
+    therapy: false,
+    redcord: true,
+    home: false,
+  });
+  const [editableText, setEditableText] = useState("陳小妍 — 下背疼痛 + 核心無力");
 
   // AI ChatBox demo state
   const [chatMessages, setChatMessages] = useState<Message[]>([
@@ -243,6 +270,428 @@ export default function ComponentsShowcase() {
         </div>
 
         <div className="space-y-12">
+          {/* Week 1 Day 1 — Design Token Smoketest */}
+          <section className="space-y-3 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Design Tokens (Week 1 Day 1)
+            </h2>
+            <div className="flex gap-2 flex-wrap">
+              <span className="bg-brand-primary text-white px-3 py-1 rounded">brand-primary</span>
+              <span className="bg-brand-accent text-white px-3 py-1 rounded">brand-accent</span>
+              <span className="bg-client-warm text-foreground px-3 py-1 rounded border">client-warm</span>
+              <span className="bg-status-good-bg text-status-good px-3 py-1 rounded">status-good</span>
+              <span className="bg-status-warn-bg text-status-warn px-3 py-1 rounded">status-warn</span>
+              <span className="bg-status-danger-bg text-status-danger px-3 py-1 rounded">status-danger</span>
+            </div>
+            <p className="font-body text-sm text-muted-foreground">
+              font-body / Inter — 中文 fallback Noto Sans TC
+            </p>
+          </section>
+
+          {/* Week 1 Day 2 — Atoms Part 1 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Atoms — Part 1 (Week 1 Day 2)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ScoreRing</h3>
+              <div className="flex items-end gap-6 flex-wrap">
+                <ScoreRing value={68} size="sm" label="sm" />
+                <ScoreRing value={68} size="md" label="md" />
+                <ScoreRing value={68} size="lg" label="lg" color="accent" />
+                <ScoreRing value={68} size="xl" label="xl / primary" />
+                <ScoreRing value={92} size="md" color="good" label="good" />
+                <ScoreRing value={55} size="md" color="warn" label="warn" />
+                <ScoreRing value={22} size="md" color="danger" label="danger" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">StatusPill</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <StatusPill status="good">正常</StatusPill>
+                <StatusPill status="warn">注意</StatusPill>
+                <StatusPill status="danger">嚴重</StatusPill>
+                <StatusPill status="neutral">待評估</StatusPill>
+                <StatusPill status="good" size="sm">sm</StatusPill>
+                <StatusPill status="warn" size="md">md</StatusPill>
+                <StatusPill status="danger" size="lg">lg</StatusPill>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SectionNumber</h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                <SectionNumber n={1} />
+                <SectionNumber n={2} color="accent" />
+                <SectionNumber n={3} color="good" />
+                <SectionNumber n={4} color="warn" />
+                <SectionNumber n={5} color="danger" />
+                <SectionNumber n={6} variant="outline" />
+                <SectionNumber n={7} variant="outline" color="accent" />
+                <SectionNumber n={8} size="lg" />
+                <SectionNumber n={9} size="xl" color="accent" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">IconBadge</h3>
+              <div className="flex items-end gap-3 flex-wrap">
+                <IconBadge icon={<Heart />} bg="primary" size="sm" />
+                <IconBadge icon={<Heart />} bg="primary" />
+                <IconBadge icon={<Activity />} bg="accent" size="lg" />
+                <IconBadge icon={<TrendingUp />} bg="warm" size="lg" />
+                <IconBadge icon={<Target />} bg="violet" size="lg" />
+                <IconBadge icon={<Check />} bg="good" size="md" />
+                <IconBadge icon={<AlertCircle />} bg="warn" size="md" />
+                <IconBadge icon={<X />} bg="danger" size="md" />
+                <IconBadge icon={<Heart />} bg="primary" size="xl" shape="rounded" />
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 3 — Atoms Part 2 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Atoms — Part 2 (Week 1 Day 3)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ChipToggle</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <ChipToggle
+                  selected={chips.training}
+                  onToggle={(v) => setChips((c) => ({ ...c, training: v }))}
+                  icon={<Dumbbell />}
+                >
+                  訓練
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.therapy}
+                  onToggle={(v) => setChips((c) => ({ ...c, therapy: v }))}
+                  icon={<Stethoscope />}
+                >
+                  治療
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.redcord}
+                  onToggle={(v) => setChips((c) => ({ ...c, redcord: v }))}
+                >
+                  Redcord
+                </ChipToggle>
+                <ChipToggle
+                  selected={chips.home}
+                  onToggle={(v) => setChips((c) => ({ ...c, home: v }))}
+                  size="sm"
+                >
+                  居家運動 (sm)
+                </ChipToggle>
+                <ChipToggle selected={false} onToggle={() => {}} disabled>
+                  disabled
+                </ChipToggle>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ProgressBar</h3>
+              <div className="max-w-md space-y-3">
+                <ProgressBar value={68} />
+                <ProgressBar value={92} color="good" />
+                <ProgressBar value={55} color="warn" size="lg" />
+                <ProgressBar value={22} color="danger" size="sm" />
+                <ProgressBar value={3} max={5} segments={5} color="accent" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">DataLabelValue</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 max-w-xl bg-card border rounded-lg p-4">
+                <DataLabelValue label="姓名" value="陳小妍" />
+                <DataLabelValue label="年齡 / 性別" value="24 歲 · 女性" />
+                <DataLabelValue label="身高" value="158 cm" emphasis="primary" />
+                <DataLabelValue label="體重" value="50 kg" emphasis="primary" />
+                <DataLabelValue
+                  label="整體分數"
+                  value="68 / 100"
+                  suffix={<StatusPill status="warn" size="sm">中等</StatusPill>}
+                />
+                <DataLabelValue
+                  layout="stack"
+                  label="主訴"
+                  value="下背痠痛、頸部緊繃"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">EditableLabel</h3>
+              <div className="max-w-md space-y-2">
+                <EditableLabel value={editableText} onChange={setEditableText} />
+                <p className="text-xs text-muted-foreground">
+                  按 Enter 儲存,Esc 取消,點外面也會儲存
+                </p>
+                <EditableLabel
+                  value=""
+                  onChange={() => {}}
+                  placeholder="點擊輸入備註..."
+                />
+                <EditableLabel value="不可編輯" onChange={() => {}} disabled />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">BodyOutlineSimple</h3>
+              <div className="flex items-end gap-6 flex-wrap">
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="sm" />
+                  <span className="text-xs text-muted-foreground">sm front</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="md" />
+                  <span className="text-xs text-muted-foreground">md front</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple size="md" view="back" />
+                  <span className="text-xs text-muted-foreground">md back</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <BodyOutlineSimple
+                    size="lg"
+                    hotspots={[
+                      { x: 0.5, y: 0.1, color: "danger" },
+                      { x: 0.5, y: 0.22, color: "danger", r: 5 },
+                      { x: 0.5, y: 0.45, color: "warn" },
+                      { x: 0.45, y: 0.6, color: "warn", r: 5 },
+                      { x: 0.6, y: 0.72, color: "danger" },
+                    ]}
+                  />
+                  <span className="text-xs text-muted-foreground">lg + 5 hotspots</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 4 — Molecules Part 1 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Molecules — Part 1 (Week 1 Day 4)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ScoreCard (client hero)</h3>
+              <ScoreCard
+                value={68}
+                title="整體身體功能分數"
+                subtitle="你目前的身體功能屬於中等偏佳,在姿勢與核心穩定方面仍有提升空間。"
+                status={{ label: "中等偏佳", tone: "warn" }}
+                trend={{ delta: 7 }}
+                ringSize="xl"
+                className="max-w-2xl"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SubScoreCard ×4 (client 4 sub-scores)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl">
+                <SubScoreCard
+                  label="姿勢結構"
+                  value={66}
+                  icon={<Bone />}
+                  iconBg="primary"
+                  status={{ label: "中等", tone: "warn" }}
+                  trend={7}
+                />
+                <SubScoreCard
+                  label="動作功能"
+                  value={70}
+                  icon={<Activity />}
+                  iconBg="good"
+                  status={{ label: "中等偏佳", tone: "good" }}
+                  trend={8}
+                />
+                <SubScoreCard
+                  label="神經肌肉控制"
+                  value={64}
+                  icon={<Brain />}
+                  iconBg="violet"
+                  status={{ label: "中等", tone: "warn" }}
+                  trend={8}
+                />
+                <SubScoreCard
+                  label="體組成"
+                  value={72}
+                  icon={<Scale />}
+                  iconBg="warm"
+                  status={{ label: "良好", tone: "good" }}
+                  trend={4}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">PriorityFindingCard ×3 (top 3 issues)</h3>
+              <div className="space-y-2 max-w-2xl">
+                <PriorityFindingCard
+                  n={1}
+                  title="骨盆略為前傾,左右平衡需加強"
+                  description="長時間坐姿習慣可能影響骨盆穩定。"
+                  icon={<AlertTriangle />}
+                  iconBg="warn"
+                  tone="warn"
+                />
+                <PriorityFindingCard
+                  n={2}
+                  title="頭頸前傾與肩頸緊繃"
+                  description="頸椎前傾角度偏大,容易引起肩頸不適。"
+                  icon={<AlertTriangle />}
+                  iconBg="danger"
+                  tone="danger"
+                />
+                <PriorityFindingCard
+                  n={3}
+                  title="核心穩定性不足"
+                  description="核心肌群啟動不足,影響動作效率與保護力。"
+                  icon={<Target />}
+                  iconBg="primary"
+                  tone="primary"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">StatusListItem (body part risk list)</h3>
+              <div className="max-w-md divide-y border rounded-lg bg-card px-4">
+                <StatusListItem label="頭頸" value={42} status="danger" hint="緊繃風險較高" />
+                <StatusListItem label="肩頸" value={48} status="danger" hint="緊繃風險較高" />
+                <StatusListItem label="胸椎" value={62} status="warn" hint="活動度偏低" />
+                <StatusListItem label="骨盆" value={58} status="warn" hint="穩定性偏弱" />
+                <StatusListItem label="右膝" value={55} status="warn" hint="壓力偏高" />
+                <StatusListItem label="體組成" value={82} status="good" hint="表現良好" />
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 5 — Molecules Part 2 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Molecules — Part 2 (Week 1 Day 5)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SystemImportCard ×4 (data sources)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl">
+                <SystemImportCard
+                  systemName="MOTI Physio"
+                  systemKind="姿勢結構分析"
+                  state="imported"
+                  summary={<>異常 <span className="font-semibold tabular-nums">4</span> 項</>}
+                  timestamp="2026/05/13 11:42"
+                  accent="primary"
+                />
+                <SystemImportCard
+                  systemName="RONFIC"
+                  systemKind="動作功能評估"
+                  state="imported"
+                  summary={<>異常 <span className="font-semibold tabular-nums">3</span> 項</>}
+                  timestamp="2026/05/13 11:18"
+                  accent="good"
+                />
+                <SystemImportCard
+                  systemName="InBody"
+                  systemKind="身體組成分析"
+                  state="imported"
+                  summary={<>體脂 <span className="font-semibold tabular-nums">22.6%</span></>}
+                  timestamp="2026/05/12 13:50"
+                  accent="accent"
+                />
+                <SystemImportCard
+                  systemName="Redcord"
+                  systemKind="神經肌肉控制評估"
+                  state="pending"
+                  summary={<>待治療師匯入</>}
+                  accent="warn"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">WeekPlanCard ×4 (4 週改善路線圖)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl">
+                <WeekPlanCard
+                  n={1}
+                  weekLabel="第 1 週"
+                  phase="啟動期"
+                  tone="primary"
+                  current
+                  items={["建立動作模式", "放鬆緊繃部位"]}
+                />
+                <WeekPlanCard
+                  n={2}
+                  weekLabel="第 2–3 週"
+                  phase="強化期"
+                  tone="good"
+                  items={["強化核心穩定", "改善姿勢控制"]}
+                />
+                <WeekPlanCard
+                  n={3}
+                  weekLabel="第 4 週"
+                  phase="整合期"
+                  tone="warn"
+                  items={["整合動作品質", "提升日常表現"]}
+                />
+                <WeekPlanCard
+                  n={4}
+                  weekLabel="複評追蹤"
+                  phase="持續進步"
+                  tone="muted"
+                  items={["評估改善成果", "調整下一步計畫"]}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">KeyFindingRow (posture findings)</h3>
+              <div className="max-w-md divide-y border rounded-lg bg-card px-4">
+                <KeyFindingRow label="頭部姿勢" value="前傾 11°" tone="warn" />
+                <KeyFindingRow label="骨盆前傾" value="輕度前傾" tone="warn" />
+                <KeyFindingRow label="骨盆側傾" value="右側低" tone="warn" />
+                <KeyFindingRow label="肩膀高度差" value="右高 6 mm" tone="good" />
+                <KeyFindingRow label="HKA 角度" value="右內扣 3°" tone="danger" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ActionRecommendationCard ×3 (改善建議)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-4xl">
+                <ActionRecommendationCard
+                  icon={<Dumbbell />}
+                  iconBg="primary"
+                  title="訓練建議"
+                  description="強化核心穩定與體部控制,改善姿勢與動作效率"
+                  ctaLabel="查看建議動作"
+                  onCtaClick={() => {}}
+                />
+                <ActionRecommendationCard
+                  icon={<HandHeart />}
+                  iconBg="good"
+                  title="治療建議"
+                  description="放鬆肩頸與胸椎活動度,調整骨盆平衡"
+                  ctaLabel="了解治療方案"
+                  onCtaClick={() => {}}
+                />
+                <ActionRecommendationCard
+                  icon={<CalendarCheck />}
+                  iconBg="violet"
+                  title="複評時間"
+                  description="建議 4 週後回來複評,追蹤進度與調整計畫"
+                  ctaLabel="預約複評"
+                  onCtaClick={() => {}}
+                />
+              </div>
+            </div>
+          </section>
+
           {/* Text Colors Section */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Text Colors</h3>

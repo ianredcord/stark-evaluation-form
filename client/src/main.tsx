@@ -1,3 +1,15 @@
+// Web fonts (self-hosted via @fontsource, aligned with existing Geist)
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
+import "@fontsource/plus-jakarta-sans/800.css";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
+import "@fontsource/noto-sans-tc/400.css";
+import "@fontsource/noto-sans-tc/500.css";
+import "@fontsource/noto-sans-tc/700.css";
+
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
