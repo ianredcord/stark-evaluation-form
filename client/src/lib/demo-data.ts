@@ -297,29 +297,8 @@ export const demoClientReport = {
       ctaLabel: "預約複評",
     },
   ],
-  prescriptions: [
-    {
-      name: "死蟲式",
-      nameEn: "Dead Bug",
-      sets: "3 組 × 10 下",
-      tag: "核心穩定",
-      thumbnailEmoji: "🪲",
-    },
-    {
-      name: "側棒式",
-      nameEn: "Side Plank",
-      sets: "3 組 × 30 秒",
-      tag: "軀幹控制",
-      thumbnailEmoji: "🪖",
-    },
-    {
-      name: "臀橋式",
-      nameEn: "Glute Bridge",
-      sets: "3 組 × 12 下",
-      tag: "骨盆穩定",
-      thumbnailEmoji: "🌉",
-    },
-  ],
+  // Resolved at runtime from DEFAULT_DEMO_PRESCRIPTIONS in shared/prescriptionKB
+  prescriptionSelectionIds: ["dead-bug", "side-plank", "glute-bridge"] as const,
   prescriptionsIntro: "以下是針對你的問題,教練特別開立的處方,可在家或場館練習",
   expectedBirthdate: "2002-03-15", // for demo verify form
   shareCode: "abc123",

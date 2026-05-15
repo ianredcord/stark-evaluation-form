@@ -16,6 +16,7 @@ import {
   demoPostureHotspots,
   demoWeekPlan,
 } from "@/lib/demo-data";
+import { getPrescription } from "@shared/prescriptionKB";
 
 const STORAGE_KEY = "stark.clientReport.verified";
 
@@ -44,6 +45,19 @@ export default function ClientReportPage() {
 
   const r = demoClientReport;
   const backHotspots = demoPostureHotspots.map((h) => ({ ...h, x: 1 - h.x }));
+  const prescriptions = r.prescriptionSelectionIds
+    .map((id) => {
+      const p = getPrescription(id);
+      if (!p) return null;
+      return {
+        name: p.name,
+        nameEn: p.nameEn,
+        sets: `${p.defaultSets} 組 × ${p.defaultReps}`,
+        tag: p.tag,
+        thumbnailEmoji: p.thumbnailEmoji,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
 
   return (
     <ClientReportLayout
@@ -90,8 +104,8 @@ export default function ClientReportPage() {
 
         <PrescriptionSection
           intro={r.prescriptionsIntro}
-          prescriptions={r.prescriptions}
-          onViewAll={() => alert("Week 5 處方知識庫")}
+          prescriptions={prescriptions}
+          onViewAll={() => (window.location.href = "/prescriptions")}
         />
 
         <ClientCTABar

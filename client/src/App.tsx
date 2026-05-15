@@ -11,6 +11,7 @@ import TemplateEdit from "./pages/TemplateEdit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
 import ClientReportPage from "./pages/ClientReportPage";
+import PrescriptionsAdmin from "./pages/PrescriptionsAdmin";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/components" component={ComponentShowcase} />
       <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
       <Route path="/r/:shareCode" component={ClientReportPage} />
+      <Route path="/prescriptions" component={PrescriptionsAdmin} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

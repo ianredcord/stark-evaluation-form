@@ -10,6 +10,12 @@ import { KeyFindingRow } from "@/components/molecules/KeyFindingRow";
 import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard";
 import { SectionNumber } from "@/components/atoms/SectionNumber";
 import { EvaluationDrawer, type DrawerTabKey } from "@/components/organisms/EvaluationDrawer";
+import { PrescriptionPicker } from "@/components/organisms/PrescriptionPicker";
+import {
+  DEFAULT_DEMO_PRESCRIPTIONS,
+  getPrescription,
+  type PrescriptionSelection,
+} from "@shared/prescriptionKB";
 import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
 import { ChipToggle } from "@/components/atoms/ChipToggle";
 import { Button } from "@/components/ui/button";
@@ -98,6 +104,10 @@ export default function IntegratedAssessmentPage() {
   const [reportNotes, setReportNotes] = useState(demoReportSummary.notes);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTabKey>("basic");
+  const [prescriptionPickerOpen, setPrescriptionPickerOpen] = useState(false);
+  const [prescriptions, setPrescriptions] = useState<PrescriptionSelection[]>([
+    ...DEFAULT_DEMO_PRESCRIPTIONS,
+  ]);
 
   const openDrawer = (tab: DrawerTabKey) => {
     setDrawerTab(tab);
@@ -386,6 +396,42 @@ export default function IntegratedAssessmentPage() {
                   </span>{" "}
                   (距今 28 天)
                 </div>
+
+                {prescriptions.length > 0 && (
+                  <div className="pt-3 border-t mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-display text-sm font-semibold">
+                        已開立處方({prescriptions.length})
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setPrescriptionPickerOpen(true)}
+                        className="inline-flex items-center gap-1 text-xs text-brand-primary hover:text-brand-primary-dark"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        編輯處方
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {prescriptions.map((sel) => {
+                        const p = getPrescription(sel.prescriptionId);
+                        if (!p) return null;
+                        return (
+                          <span
+                            key={sel.prescriptionId}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-bg-subtle px-2.5 py-1 text-xs"
+                          >
+                            <span>{p.thumbnailEmoji}</span>
+                            <span className="font-medium">{p.name}</span>
+                            <span className="text-muted-foreground tabular-nums">
+                              {sel.sets}×{sel.reps}
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </SectionCard>
             </>
           )}
@@ -403,7 +449,7 @@ export default function IntegratedAssessmentPage() {
           lastUpdatedBy={demoReportSummary.lastUpdatedBy}
           lastUpdatedAt={demoReportSummary.lastUpdatedAt}
           onSaveDraft={() => alert("儲存草稿 — Week 4 接 tRPC")}
-          onAssignPlan={() => alert("指派治療計畫 — Week 5 處方系統")}
+          onAssignPlan={() => setPrescriptionPickerOpen(true)}
           onGenerateReport={() =>
             alert("產生客戶報告 — Week 3 shareCode 才生效")
           }
@@ -415,6 +461,13 @@ export default function IntegratedAssessmentPage() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         initialTab={drawerTab}
+      />
+
+      <PrescriptionPicker
+        open={prescriptionPickerOpen}
+        onOpenChange={setPrescriptionPickerOpen}
+        selected={prescriptions}
+        onConfirm={setPrescriptions}
       />
     </TherapistLayout>
   );
