@@ -23,7 +23,7 @@ export type BodyHotspot = {
 export type BodyOutlineSimpleProps = {
   view?: "front" | "back";
   size?: keyof typeof SIZE_MAP;
-  hotspots?: BodyHotspot[];
+  hotspots?: readonly BodyHotspot[];
   className?: string;
 };
 

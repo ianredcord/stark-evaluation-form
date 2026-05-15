@@ -10,6 +10,7 @@ import Templates from "./pages/Templates";
 import TemplateEdit from "./pages/TemplateEdit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedAssessmentPage from "./pages/IntegratedAssessmentPage";
+import ClientReportPage from "./pages/ClientReportPage";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/components" component={ComponentShowcase} />
       <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
+      <Route path="/r/:shareCode" component={ClientReportPage} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

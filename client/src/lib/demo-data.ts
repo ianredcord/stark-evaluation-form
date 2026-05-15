@@ -192,6 +192,139 @@ export const demoReportSummary = {
   lastUpdatedAt: "2026/05/13 17:28",
 };
 
+// --- Client-facing report (Week 3) ---
+
+export const demoClientReport = {
+  evaluationDate: "2026/05/13",
+  lastScore: 61,
+  currentScore: 68,
+  state: { label: "穩定進步中", tone: "warn" as const },
+  encouragement:
+    "你的身體功能表現屬於中等偏佳,在姿勢與核心穩定方面仍有提升空間。我們已為你擬定個人化改善計畫,持續練習,會讓你越來越好!",
+  subScores: {
+    posture: { value: 66, last: 59, tone: "warn" as const, toneLabel: "中等" },
+    movement: {
+      value: 70,
+      last: 62,
+      tone: "good" as const,
+      toneLabel: "中等偏佳",
+    },
+    neuromuscular: {
+      value: 64,
+      last: 56,
+      tone: "warn" as const,
+      toneLabel: "中等",
+    },
+    composition: {
+      value: 72,
+      last: 68,
+      tone: "good" as const,
+      toneLabel: "良好",
+    },
+  },
+  priorityFindings: [
+    {
+      title: "骨盆略為前傾,左右平衡需加強",
+      description: "長時間坐姿習慣可能影響骨盆穩定。",
+    },
+    {
+      title: "頭頸前傾與肩頸緊繃",
+      description: "頸椎前傾角度偏大,容易引起肩頸不適。",
+    },
+    {
+      title: "核心穩定性不足",
+      description: "核心肌群啟動不足,影響動作效率與保護力。",
+    },
+  ],
+  goodNews:
+    "你的體組成與肌肉量表現良好,是建立健康與提升表現的好基礎!",
+  riskLegend: [
+    { label: "頭頸", hint: "緊繃風險較高", tone: "danger" as const },
+    { label: "肩頸", hint: "緊繃風險較高", tone: "danger" as const },
+    { label: "胸椎", hint: "活動度偏低", tone: "warn" as const },
+    { label: "骨盆", hint: "穩定性偏弱", tone: "warn" as const },
+    { label: "右膝", hint: "壓力偏高", tone: "danger" as const },
+  ],
+  strengths: [
+    { label: "體組成表現良好", hint: "體脂 22.6%" },
+    { label: "肌肉量充足", hint: "18.7 kg" },
+    { label: "肩膀對稱性佳" },
+  ],
+  strengthsClosing: "這些是你建立健康與提升表現的好基礎。",
+  dataSources: [
+    {
+      systemName: "MOTI Physio",
+      systemKind: "姿勢結構分析",
+      state: "imported" as const,
+      accent: "primary" as const,
+    },
+    {
+      systemName: "RONFIC",
+      systemKind: "動作功能評估",
+      state: "imported" as const,
+      accent: "good" as const,
+    },
+    {
+      systemName: "InBody",
+      systemKind: "身體組成分析",
+      state: "imported" as const,
+      accent: "accent" as const,
+    },
+    {
+      systemName: "Redcord",
+      systemKind: "神經肌肉控制評估",
+      state: "imported" as const,
+      accent: "warn" as const,
+    },
+  ],
+  recommendations: [
+    {
+      icon: "training" as const,
+      title: "訓練建議",
+      description: "強化核心穩定與體部控制,改善姿勢與動作效率",
+      ctaLabel: "查看建議動作",
+    },
+    {
+      icon: "therapy" as const,
+      title: "治療建議",
+      description: "放鬆肩頸與胸椎活動度,調整骨盆平衡",
+      ctaLabel: "了解治療方案",
+    },
+    {
+      icon: "reassess" as const,
+      title: "複評時間",
+      description: "建議 4 週後回來複評,追蹤進度與調整計畫",
+      ctaLabel: "預約複評",
+    },
+  ],
+  prescriptions: [
+    {
+      name: "死蟲式",
+      nameEn: "Dead Bug",
+      sets: "3 組 × 10 下",
+      tag: "核心穩定",
+      thumbnailEmoji: "🪲",
+    },
+    {
+      name: "側棒式",
+      nameEn: "Side Plank",
+      sets: "3 組 × 30 秒",
+      tag: "軀幹控制",
+      thumbnailEmoji: "🪖",
+    },
+    {
+      name: "臀橋式",
+      nameEn: "Glute Bridge",
+      sets: "3 組 × 12 下",
+      tag: "骨盆穩定",
+      thumbnailEmoji: "🌉",
+    },
+  ],
+  prescriptionsIntro: "以下是針對你的問題,教練特別開立的處方,可在家或場館練習",
+  expectedBirthdate: "2002-03-15", // for demo verify form
+  shareCode: "abc123",
+};
+
 export const demoTabs = [
   { key: "complaint", label: "主訴與病史" },
   { key: "posture", label: "姿勢判讀" },

@@ -4,7 +4,7 @@ import { SectionNumber } from "@/components/atoms/SectionNumber";
 export type WeekPlanCardProps = {
   weekLabel: string;
   phase: string;
-  items: string[];
+  items: readonly string[];
   n: number | string;
   tone?: "primary" | "accent" | "good" | "warn" | "danger" | "muted";
   current?: boolean;
