@@ -185,7 +185,11 @@ import { ScoreCard } from "@/components/molecules/ScoreCard";
 import { SubScoreCard } from "@/components/molecules/SubScoreCard";
 import { PriorityFindingCard } from "@/components/molecules/PriorityFindingCard";
 import { StatusListItem } from "@/components/molecules/StatusListItem";
-import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope, Bone, Brain, Scale, AlertTriangle } from "lucide-react";
+import { SystemImportCard } from "@/components/molecules/SystemImportCard";
+import { WeekPlanCard } from "@/components/molecules/WeekPlanCard";
+import { KeyFindingRow } from "@/components/molecules/KeyFindingRow";
+import { ActionRecommendationCard } from "@/components/molecules/ActionRecommendationCard";
+import { Activity, Heart, Target, TrendingUp, Dumbbell, Stethoscope, Bone, Brain, Scale, AlertTriangle, CalendarCheck, HandHeart } from "lucide-react";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -564,6 +568,126 @@ export default function ComponentsShowcase() {
                 <StatusListItem label="骨盆" value={58} status="warn" hint="穩定性偏弱" />
                 <StatusListItem label="右膝" value={55} status="warn" hint="壓力偏高" />
                 <StatusListItem label="體組成" value={82} status="good" hint="表現良好" />
+              </div>
+            </div>
+          </section>
+
+          {/* Week 1 Day 5 — Molecules Part 2 */}
+          <section className="space-y-6 mb-4">
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Molecules — Part 2 (Week 1 Day 5)
+            </h2>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">SystemImportCard ×4 (data sources)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl">
+                <SystemImportCard
+                  systemName="MOTI Physio"
+                  systemKind="姿勢結構分析"
+                  state="imported"
+                  summary={<>異常 <span className="font-semibold tabular-nums">4</span> 項</>}
+                  timestamp="2026/05/13 11:42"
+                  accent="primary"
+                />
+                <SystemImportCard
+                  systemName="RONFIC"
+                  systemKind="動作功能評估"
+                  state="imported"
+                  summary={<>異常 <span className="font-semibold tabular-nums">3</span> 項</>}
+                  timestamp="2026/05/13 11:18"
+                  accent="good"
+                />
+                <SystemImportCard
+                  systemName="InBody"
+                  systemKind="身體組成分析"
+                  state="imported"
+                  summary={<>體脂 <span className="font-semibold tabular-nums">22.6%</span></>}
+                  timestamp="2026/05/12 13:50"
+                  accent="accent"
+                />
+                <SystemImportCard
+                  systemName="Redcord"
+                  systemKind="神經肌肉控制評估"
+                  state="pending"
+                  summary={<>待治療師匯入</>}
+                  accent="warn"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">WeekPlanCard ×4 (4 週改善路線圖)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl">
+                <WeekPlanCard
+                  n={1}
+                  weekLabel="第 1 週"
+                  phase="啟動期"
+                  tone="primary"
+                  current
+                  items={["建立動作模式", "放鬆緊繃部位"]}
+                />
+                <WeekPlanCard
+                  n={2}
+                  weekLabel="第 2–3 週"
+                  phase="強化期"
+                  tone="good"
+                  items={["強化核心穩定", "改善姿勢控制"]}
+                />
+                <WeekPlanCard
+                  n={3}
+                  weekLabel="第 4 週"
+                  phase="整合期"
+                  tone="warn"
+                  items={["整合動作品質", "提升日常表現"]}
+                />
+                <WeekPlanCard
+                  n={4}
+                  weekLabel="複評追蹤"
+                  phase="持續進步"
+                  tone="muted"
+                  items={["評估改善成果", "調整下一步計畫"]}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">KeyFindingRow (posture findings)</h3>
+              <div className="max-w-md divide-y border rounded-lg bg-card px-4">
+                <KeyFindingRow label="頭部姿勢" value="前傾 11°" tone="warn" />
+                <KeyFindingRow label="骨盆前傾" value="輕度前傾" tone="warn" />
+                <KeyFindingRow label="骨盆側傾" value="右側低" tone="warn" />
+                <KeyFindingRow label="肩膀高度差" value="右高 6 mm" tone="good" />
+                <KeyFindingRow label="HKA 角度" value="右內扣 3°" tone="danger" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-semibold">ActionRecommendationCard ×3 (改善建議)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-4xl">
+                <ActionRecommendationCard
+                  icon={<Dumbbell />}
+                  iconBg="primary"
+                  title="訓練建議"
+                  description="強化核心穩定與體部控制,改善姿勢與動作效率"
+                  ctaLabel="查看建議動作"
+                  onCtaClick={() => {}}
+                />
+                <ActionRecommendationCard
+                  icon={<HandHeart />}
+                  iconBg="good"
+                  title="治療建議"
+                  description="放鬆肩頸與胸椎活動度,調整骨盆平衡"
+                  ctaLabel="了解治療方案"
+                  onCtaClick={() => {}}
+                />
+                <ActionRecommendationCard
+                  icon={<CalendarCheck />}
+                  iconBg="violet"
+                  title="複評時間"
+                  description="建議 4 週後回來複評,追蹤進度與調整計畫"
+                  ctaLabel="預約複評"
+                  onCtaClick={() => {}}
+                />
               </div>
             </div>
           </section>
