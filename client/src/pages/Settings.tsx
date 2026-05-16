@@ -3,6 +3,7 @@ import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 import {
   User,
   Building,
@@ -11,6 +12,8 @@ import {
   Database,
   FileText,
   ChevronRight,
+  Shield,
+  ArrowRight,
 } from "lucide-react";
 
 const SECTIONS = [
@@ -189,6 +192,20 @@ function SecuritySection() {
   return (
     <>
       <h2 className="font-display text-lg font-semibold">帳號安全</h2>
+      <Link href="/admin/users">
+        <a className="flex items-center justify-between gap-3 rounded-lg border-2 border-brand-primary/30 bg-brand-primary/5 p-3 hover:bg-brand-primary/10 transition-colors">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-brand-primary shrink-0" />
+            <div>
+              <p className="text-sm font-medium">使用者管理</p>
+              <p className="text-xs text-muted-foreground">
+                管理員專用 · 查看所有登入帳號 · 升降權限
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-brand-primary" />
+        </a>
+      </Link>
       <FieldRow
         label="Google 登入"
         value="已啟用"
