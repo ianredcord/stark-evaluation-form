@@ -38,6 +38,7 @@ export default function ClientReportPage() {
     return (
       <BirthdateVerifyForm
         expected={demoClientReport.expectedBirthdate}
+        demoHint
         onVerified={() => {
           sessionStorage.setItem(STORAGE_KEY + ":" + shareCode, "1");
           setVerified(true);
