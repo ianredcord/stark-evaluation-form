@@ -115,12 +115,28 @@ export function registerGoogleAuthRoutes(app: Express) {
 
         const openId = `google:${claims.sub}`;
 
+        // Owner / admin allowlist via env. OWNER_EMAIL = single email,
+        // OWNER_EMAIL_DOMAIN = wildcard domain (e.g. stark.works).
+        // Either match auto-promotes the upserted user to admin.
+        const ownerEmail = (process.env.OWNER_EMAIL ?? "")
+          .toLowerCase()
+          .trim();
+        const ownerDomain = (process.env.OWNER_EMAIL_DOMAIN ?? "")
+          .toLowerCase()
+          .trim()
+          .replace(/^@/, "");
+        const emailLower = (claims.email ?? "").toLowerCase();
+        const isOwner =
+          (ownerEmail && emailLower === ownerEmail) ||
+          (ownerDomain && emailLower.endsWith(`@${ownerDomain}`));
+
         await db.upsertUser({
           openId,
           name: claims.name ?? null,
           email: claims.email ?? null,
           loginMethod: "google",
           lastSignedIn: new Date(),
+          ...(isOwner ? { role: "admin" as const } : {}),
         });
 
         const sessionToken = await sdk.createSessionToken(openId, {
