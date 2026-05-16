@@ -13,6 +13,8 @@ import {
   TrendingUp,
   LayoutTemplate,
   Users,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -109,13 +111,24 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* 統計卡片 */}
+            {/* 統計卡片 (第一排) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <BigStat
                 icon={<ClipboardList className="w-5 h-5" />}
                 value={stats.total}
                 label="總評估數"
                 trend={`本月新增 ${stats.thisMonth}`}
+              />
+              <BigStat
+                icon={<Users className="w-5 h-5" />}
+                value={stats.uniqueClients}
+                label="獨立客戶數"
+                trend={
+                  stats.uniqueClients > 0 && stats.total > 0
+                    ? `平均每位 ${(stats.total / stats.uniqueClients).toFixed(1)} 份`
+                    : "—"
+                }
+                href="/clients"
               />
               <BigStat
                 icon={<Share2 className="w-5 h-5" />}
@@ -137,11 +150,40 @@ export default function Dashboard() {
                     : "—"
                 }
               />
+            </div>
+
+            {/* 統計卡片 (第二排:範本 + 回饋) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <BigStat
                 icon={<LayoutTemplate className="w-5 h-5" />}
                 value={stats.templates}
                 label="範本數"
                 trend={user.clinicId ? "同診所共享" : "個人範本"}
+                href="/templates"
+              />
+              <BigStat
+                icon={<Star className="w-5 h-5" />}
+                value={
+                  stats.feedbackCount > 0
+                    ? Number(stats.feedbackAverage.toFixed(1))
+                    : 0
+                }
+                label="客戶平均評分"
+                trend={
+                  stats.feedbackCount > 0
+                    ? `共 ${stats.feedbackCount} 則回饋`
+                    : "尚無回饋"
+                }
+              />
+              <BigStat
+                icon={<MessageSquare className="w-5 h-5" />}
+                value={stats.feedbackCount}
+                label="累積回饋數"
+                trend={
+                  stats.shared > 0
+                    ? `${Math.round((stats.feedbackCount / stats.shared) * 100)}% 填答率`
+                    : "—"
+                }
               />
             </div>
 
@@ -261,14 +303,20 @@ function BigStat({
   value,
   label,
   trend,
+  href,
 }: {
   icon: React.ReactNode;
   value: number;
   label: string;
   trend: string;
+  href?: string;
 }) {
-  return (
-    <Card>
+  const inner = (
+    <Card
+      className={
+        href ? "cursor-pointer hover:border-stark-orange transition-colors" : ""
+      }
+    >
       <CardContent className="pt-6">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="text-stark-orange">{icon}</div>
@@ -281,4 +329,5 @@ function BigStat({
       </CardContent>
     </Card>
   );
+  return href ? <Link href={href}>{inner}</Link> : inner;
 }

@@ -140,3 +140,17 @@ export const evaluationTemplates = mysqlTable("evaluationTemplates", {
 
 export type EvaluationTemplate = typeof evaluationTemplates.$inferSelect;
 export type InsertEvaluationTemplate = typeof evaluationTemplates.$inferInsert;
+
+/**
+ * 客戶端評估回饋(透過分享連結提交)
+ */
+export const evaluationFeedbacks = mysqlTable("evaluationFeedbacks", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  rating: int("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EvaluationFeedback = typeof evaluationFeedbacks.$inferSelect;
+export type InsertEvaluationFeedback = typeof evaluationFeedbacks.$inferInsert;

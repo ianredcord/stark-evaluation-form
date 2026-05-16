@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { RiskRing } from "@/components/PublicReport/RiskRing";
 import { ImbalanceCard } from "@/components/PublicReport/ImbalanceCard";
 import { PrescriptionTabs } from "@/components/PublicReport/PrescriptionTabs";
+import { PublicFeedbackForm } from "@/components/PublicFeedbackForm";
 import { BodyMap } from "@/components/PublicReport/BodyMap";
 import {
   MOTI_THRESHOLDS,
@@ -202,6 +203,9 @@ export default function PublicReport() {
           </h2>
           <PrescriptionTabs prescriptions={prescriptions} />
         </section>
+
+        {/* 客戶回饋 */}
+        <PublicFeedbackForm shareCode={shareCode} />
 
         {/* Footer */}
         <footer className="text-center text-[10px] text-muted-foreground py-6">

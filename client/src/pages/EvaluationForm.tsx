@@ -11,7 +11,7 @@ import { Page6Ronfic } from "@/components/pages/Page6Ronfic";
 import { Page7TrainingPlan } from "@/components/pages/Page7TrainingPlan";
 import { Page8Prescription } from "@/components/pages/Page8Prescription";
 import { DateInput } from "@/components/FormFields";
-import { FileDown, Save, Loader2, LayoutTemplate, Share2, Eye } from "lucide-react";
+import { FileDown, Save, Loader2, LayoutTemplate, Share2, Eye, GitCompare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -476,6 +476,17 @@ function EvaluationFormContent() {
               >
                 <Eye className="w-4 h-4" />
                 <span className="hidden sm:inline">預覽報告</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (evaluationId) setLocation(`/evaluation/${evaluationId}/compare`);
+                }}
+                disabled={!evaluationId}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-stark-border bg-white text-stark-text hover:bg-stark-bg transition-colors disabled:opacity-50"
+                title="比較同客戶歷史評估的進步幅度"
+              >
+                <GitCompare className="w-4 h-4" />
+                <span className="hidden sm:inline">比較進度</span>
               </button>
               <button
                 onClick={handleCopyShareLink}

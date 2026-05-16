@@ -1,6 +1,6 @@
-import { desc, eq, or, sql } from "drizzle-orm";
+import { desc, eq, or, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate } from "../drizzle/schema";
+import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate, evaluationFeedbacks, EvaluationFeedback, InsertEvaluationFeedback } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -216,6 +216,9 @@ export interface EvaluationStats {
   totalViews: number;
   thisMonth: number;
   templates: number;
+  uniqueClients: number;
+  feedbackCount: number;
+  feedbackAverage: number;
   // 最近 7 日 [{date: 'YYYY-MM-DD', count: number}]
   recentDays: Array<{ date: string; count: number }>;
   // 最近 5 筆評估
@@ -240,6 +243,9 @@ export async function getEvaluationStats(
     totalViews: 0,
     thisMonth: 0,
     templates: 0,
+    uniqueClients: 0,
+    feedbackCount: 0,
+    feedbackAverage: 0,
     recentDays: buildLast7DaysSkeleton(),
     recentEvaluations: [],
   };
@@ -248,10 +254,14 @@ export async function getEvaluationStats(
   if (!db) return empty;
 
   try {
-    const [evals, templates] = await Promise.all([
+    const [evals, templates, feedback] = await Promise.all([
       getEvaluationsForClinic(userId, clinicId),
       getTemplatesForClinic(userId, clinicId),
+      getFeedbackSummary(userId, clinicId),
     ]);
+    const uniqueClients = new Set(
+      evals.map((e) => (e.clientName || "").trim()).filter(Boolean),
+    ).size;
 
     const thisMonthStart = new Date();
     thisMonthStart.setDate(1);
@@ -288,6 +298,9 @@ export async function getEvaluationStats(
       totalViews,
       thisMonth,
       templates: templates.length,
+      uniqueClients,
+      feedbackCount: feedback.count,
+      feedbackAverage: feedback.average,
       recentDays,
       recentEvaluations,
     };
@@ -312,6 +325,176 @@ function buildLast7DaysSkeleton(): Array<{ date: string; count: number }> {
     result.push({ date: d.toISOString().slice(0, 10), count: 0 });
   }
   return result;
+}
+
+/**
+ * 客戶列表(以 clientName 分群)
+ * 從 evaluations 萃取出唯一客戶,每位帶最後評估日期、總評估數、最後分享狀態
+ */
+export interface ClientSummary {
+  name: string;
+  birthday: string | null;
+  occupation: string | null;
+  evaluationCount: number;
+  lastEvaluationDate: string | null;
+  lastEvaluationId: number;
+  hasShareCode: boolean;
+  totalViews: number;
+  lastUpdatedAt: Date;
+}
+
+export async function getClientsForClinic(
+  userId: number,
+  clinicId: string | null,
+): Promise<ClientSummary[]> {
+  const all = await getEvaluationsForClinic(userId, clinicId);
+  const map = new Map<string, ClientSummary>();
+  for (const e of all) {
+    const name = (e.clientName || "").trim();
+    if (!name) continue;
+    const existing = map.get(name);
+    if (!existing) {
+      map.set(name, {
+        name,
+        birthday: e.birthday,
+        occupation: e.occupation,
+        evaluationCount: 1,
+        lastEvaluationDate: e.date,
+        lastEvaluationId: e.id,
+        hasShareCode: Boolean(e.shareCode),
+        totalViews: e.viewCount ?? 0,
+        lastUpdatedAt: e.updatedAt ?? e.createdAt,
+      });
+    } else {
+      existing.evaluationCount += 1;
+      existing.totalViews += e.viewCount ?? 0;
+      // 因為 getEvaluationsForClinic 已按 createdAt desc 排序,第一筆即為最新
+      // 後面遇到的視為舊資料,只補生日/職業若先前為空
+      if (!existing.birthday && e.birthday) existing.birthday = e.birthday;
+      if (!existing.occupation && e.occupation) existing.occupation = e.occupation;
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.lastUpdatedAt.getTime() - a.lastUpdatedAt.getTime(),
+  );
+}
+
+/**
+ * 取得特定客戶的完整評估歷史(同診所範圍)
+ */
+export async function getClientHistory(
+  userId: number,
+  clinicId: string | null,
+  clientName: string,
+): Promise<Evaluation[]> {
+  const all = await getEvaluationsForClinic(userId, clinicId);
+  return all.filter((e) => (e.clientName || "").trim() === clientName.trim());
+}
+
+/**
+ * 提交客戶端回饋(透過 shareCode 公開提交)
+ */
+export async function createFeedback(
+  shareCode: string,
+  rating: number,
+  comment: string | null,
+): Promise<{ ok: boolean; evaluationId?: number }> {
+  const db = await getDb();
+  if (!db) return { ok: false };
+  if (rating < 1 || rating > 5) return { ok: false };
+  try {
+    const evalRow = await getEvaluationByShareCode(shareCode);
+    if (!evalRow) return { ok: false };
+    await db.insert(evaluationFeedbacks).values({
+      evaluationId: evalRow.id,
+      rating,
+      comment: comment?.slice(0, 1000) || null,
+    } satisfies InsertEvaluationFeedback);
+    return { ok: true, evaluationId: evalRow.id };
+  } catch (error) {
+    console.error("[Database] Failed to create feedback:", error);
+    return { ok: false };
+  }
+}
+
+/**
+ * 取得單一評估的所有回饋
+ */
+export async function getFeedbacksForEvaluation(
+  evaluationId: number,
+): Promise<EvaluationFeedback[]> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db
+      .select()
+      .from(evaluationFeedbacks)
+      .where(eq(evaluationFeedbacks.evaluationId, evaluationId))
+      .orderBy(desc(evaluationFeedbacks.createdAt));
+  } catch (error) {
+    console.error("[Database] Failed to get feedbacks:", error);
+    return [];
+  }
+}
+
+/**
+ * 治療師回饋彙總(平均分、未讀數、最近 5 則)
+ */
+export interface FeedbackSummary {
+  count: number;
+  average: number;
+  recent: Array<{
+    id: number;
+    evaluationId: number;
+    clientName: string | null;
+    rating: number;
+    comment: string | null;
+    createdAt: Date;
+  }>;
+}
+
+export async function getFeedbackSummary(
+  userId: number,
+  clinicId: string | null,
+): Promise<FeedbackSummary> {
+  const empty: FeedbackSummary = { count: 0, average: 0, recent: [] };
+  const db = await getDb();
+  if (!db) return empty;
+
+  try {
+    const evals = await getEvaluationsForClinic(userId, clinicId);
+    if (evals.length === 0) return empty;
+
+    const idMap = new Map(evals.map((e) => [e.id, e.clientName]));
+    const ids = evals.map((e) => e.id);
+
+    const feedbacks = await db
+      .select()
+      .from(evaluationFeedbacks)
+      .where(inArray(evaluationFeedbacks.evaluationId, ids))
+      .orderBy(desc(evaluationFeedbacks.createdAt));
+
+    if (feedbacks.length === 0) return empty;
+
+    const sum = feedbacks.reduce((acc, f) => acc + f.rating, 0);
+    const avg = sum / feedbacks.length;
+
+    return {
+      count: feedbacks.length,
+      average: Math.round(avg * 10) / 10,
+      recent: feedbacks.slice(0, 5).map((f) => ({
+        id: f.id,
+        evaluationId: f.evaluationId,
+        clientName: idMap.get(f.evaluationId) ?? null,
+        rating: f.rating,
+        comment: f.comment,
+        createdAt: f.createdAt,
+      })),
+    };
+  } catch (error) {
+    console.error("[Database] Failed to summarize feedback:", error);
+    return empty;
+  }
 }
 
 /**

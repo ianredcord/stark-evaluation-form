@@ -89,6 +89,16 @@ export default function Home() {
                       儀表板
                     </Button>
                   </Link>
+                  <Link href="/clients">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="gap-2 border-stark-border hover:bg-stark-bg"
+                    >
+                      <Users className="w-5 h-5" />
+                      客戶管理
+                    </Button>
+                  </Link>
                   <Link href="/evaluations">
                     <Button
                       size="lg"

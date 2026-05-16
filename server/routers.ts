@@ -24,6 +24,10 @@ import {
   deleteTemplate,
   upsertUser,
   getUserByOpenId,
+  getClientsForClinic,
+  getClientHistory,
+  createFeedback,
+  getFeedbacksForEvaluation,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -155,6 +159,72 @@ export const appRouter = router({
     overview: protectedProcedure.query(async ({ ctx }) => {
       return getEvaluationStats(ctx.user.id, ctx.user.clinicId ?? null);
     }),
+  }),
+
+  // 客戶管理(從 evaluations 按 clientName 萃取)
+  clients: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return getClientsForClinic(ctx.user.id, ctx.user.clinicId ?? null);
+    }),
+    history: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(100) }))
+      .query(async ({ ctx, input }) => {
+        const list = await getClientHistory(
+          ctx.user.id,
+          ctx.user.clinicId ?? null,
+          input.name,
+        );
+        // 不回傳大檔(motiPhysioPage*, ronfic*, signature, photos)
+        return list.map((e) => ({
+          id: e.id,
+          date: e.date,
+          clientName: e.clientName,
+          createdAt: e.createdAt,
+          updatedAt: e.updatedAt,
+          viewCount: e.viewCount,
+          hasShareCode: Boolean(e.shareCode),
+          shareCode: e.shareCode,
+          // 用於比較頁的關鍵指標
+          motiRiskValues: e.motiRiskValues,
+          functionalMovement: e.functionalMovement,
+          redcordAssessment: e.redcordAssessment,
+          prescriptions: e.prescriptions,
+          isOwn: e.userId === ctx.user.id,
+        }));
+      }),
+  }),
+
+  // 客戶端回饋(公開提交 + 治療師查看)
+  feedback: router({
+    submit: publicProcedure
+      .input(
+        z.object({
+          shareCode: z.string().min(1),
+          rating: z.number().int().min(1).max(5),
+          comment: z.string().max(1000).optional(),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        return createFeedback(
+          input.shareCode,
+          input.rating,
+          input.comment ?? null,
+        );
+      }),
+    listForEvaluation: protectedProcedure
+      .input(z.object({ evaluationId: z.number().int() }))
+      .query(async ({ ctx, input }) => {
+        const e = await getEvaluationById(input.evaluationId);
+        if (!e) return [];
+        // 權限:同 userId 或同 clinicId 才能看
+        const sameClinic = Boolean(
+          ctx.user.clinicId &&
+            e.clinicId &&
+            ctx.user.clinicId === e.clinicId,
+        );
+        if (e.userId !== ctx.user.id && !sameClinic) return [];
+        return getFeedbacksForEvaluation(input.evaluationId);
+      }),
   }),
 
   // 評估表 API

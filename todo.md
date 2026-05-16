@@ -236,6 +236,24 @@
 - [x] 修復 Home 連到 /evaluations 但路由不存在的 bug
 - [x] 新增 Evaluations.tsx 評估歷史列表頁（搜尋、瀏覽次數、同診所徽章、快速複製分享連結）
 
+## 客戶 CRM + 比較 + 回饋（3 大主題功能）
+- [x] DB schema: `evaluationFeedbacks` table + migration 0008
+- [x] `getClientsForClinic()` group by clientName,帶 evaluationCount/lastDate/totalViews
+- [x] `getClientHistory()` 取單一客戶所有評估
+- [x] `createFeedback()` / `getFeedbacksForEvaluation()` / `getFeedbackSummary()`
+- [x] stats overview 加 uniqueClients / feedbackCount / feedbackAverage
+- [x] `clients.list` + `clients.history` tRPC endpoints
+- [x] `feedback.submit` (public) + `feedback.listForEvaluation` (protected)
+- [x] `/clients` 客戶列表(搜尋、評估數徽章、最近瀏覽數)
+- [x] `/clients/:name` 客戶歷史 timeline(最新標記、同診所徽章、計量徽章)
+- [x] `/evaluation/:id/compare` 並排比較頁(Moti 12 項 + 整體指數 + 趨勢箭頭)
+- [x] `PublicFeedbackForm` 客戶回饋(5 星 + 短評,localStorage 防重)
+- [x] PublicReport 接入回饋表單(列印時隱藏)
+- [x] Dashboard 加 4 卡:獨立客戶數、平均評分、累積回饋、卡片可點導頁
+- [x] EvaluationForm header 加「比較進度」按鈕
+- [x] Home 加客戶管理入口
+- [x] 7 個 client/feedback 新測試 + 14/14 路由 smoke test
+
 ## 新增頁面（一次補完 6 頁）
 - [x] `server/db.ts` 加 `getEvaluationStats()` 彙整：總數、已分享、總瀏覽、本月、近 7 日、最近 5 筆
 - [x] `server/routers.ts` 加 `stats.overview` query 與 `auth.updateProfile` mutation
