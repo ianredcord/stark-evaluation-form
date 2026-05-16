@@ -43,6 +43,13 @@
       "when": 1778901228168,
       "tag": "0005_fancy_mordo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1778913613386,
+      "tag": "0006_small_sphinx",
+      "breakpoints": true
     }
   ]
 }
