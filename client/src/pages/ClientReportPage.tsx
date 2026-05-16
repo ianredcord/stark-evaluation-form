@@ -64,7 +64,7 @@ export default function ClientReportPage() {
   return (
     <ClientReportLayout
       shareCode={shareCode}
-      onDownloadPdf={() => alert("Week 6 啟用 Puppeteer PDF")}
+      onDownloadPdf={() => window.print()}
     >
       <motion.div
         className="max-w-6xl mx-auto space-y-5"

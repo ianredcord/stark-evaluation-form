@@ -226,6 +226,35 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  /* a11y: visible focus ring for keyboard users */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Skip-to-content link (revealed when focused) */
+  .skip-to-content {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--color-brand-primary);
+    color: white;
+    border-radius: 0.375rem;
+    transform: translateY(-200%);
+    transition: transform 0.2s;
+  }
+  .skip-to-content:focus {
+    transform: translateY(0);
+  }
+
+  /* Better contrast for muted text */
+  .text-muted-foreground {
+    /* tailwind default is 0.45 lightness; keep but ensure contrast hits AA on bg-page */
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -308,5 +337,60 @@
       padding-right: 2rem;
       max-width: 1280px; /* Standard content width */
     }
+  }
+}
+
+/* === Print styles for client report PDF export === */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 10mm;
+  }
+
+  /* Force backgrounds + colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide non-printable UI chrome */
+  aside,
+  nav[class*="border-b"],
+  header[class*="flex items-center justify-end"],
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  /* Reset body for print */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Show full content area */
+  main {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Avoid breaks inside cards */
+  section,
+  .rounded-xl,
+  .rounded-lg {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Page breaks before major sections */
+  section + section {
+    break-before: auto;
+  }
+
+  /* Strip background hover/animations */
+  * {
+    transition: none !important;
+    animation: none !important;
   }
 }

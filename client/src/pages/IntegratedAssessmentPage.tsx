@@ -376,7 +376,10 @@ export default function IntegratedAssessmentPage() {
                         i === 0 ? "danger" : i === 1 ? "warn" : "primary"
                       }
                       action={
-                        <button className="p-1 rounded hover:bg-muted">
+                        <button
+                          aria-label={`調整第 ${i + 1} 優先問題`}
+                          className="p-1 rounded hover:bg-muted"
+                        >
                           <MoreVertical className="w-4 h-4 text-muted-foreground" />
                         </button>
                       }
