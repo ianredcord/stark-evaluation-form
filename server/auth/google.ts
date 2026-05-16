@@ -117,7 +117,8 @@ export function registerGoogleAuthRoutes(app: Express) {
 
         // Owner / admin allowlist via env. OWNER_EMAIL = single email,
         // OWNER_EMAIL_DOMAIN = wildcard domain (e.g. stark.works).
-        // Either match auto-promotes the upserted user to admin.
+        // Either match auto-promotes the upserted user to super_admin
+        // on every login (so a demoted owner re-grants on relogin).
         const ownerEmail = (process.env.OWNER_EMAIL ?? "")
           .toLowerCase()
           .trim();
@@ -130,13 +131,25 @@ export function registerGoogleAuthRoutes(app: Express) {
           (ownerEmail && emailLower === ownerEmail) ||
           (ownerDomain && emailLower.endsWith(`@${ownerDomain}`));
 
+        // Determine whether to override role on this upsert:
+        // - isOwner: always force super_admin
+        // - new user: default to therapist on first insert
+        // - existing non-owner user: leave role alone (preserve admin
+        //   promotions / demotions made via /admin/users)
+        const existing = await db.getUserByOpenId(openId);
+        const roleOverride: "super_admin" | "therapist" | undefined = isOwner
+          ? "super_admin"
+          : existing
+            ? undefined
+            : "therapist";
+
         await db.upsertUser({
           openId,
           name: claims.name ?? null,
           email: claims.email ?? null,
           loginMethod: "google",
           lastSignedIn: new Date(),
-          ...(isOwner ? { role: "admin" as const } : {}),
+          ...(roleOverride ? { role: roleOverride } : {}),
         });
 
         const sessionToken = await sdk.createSessionToken(openId, {

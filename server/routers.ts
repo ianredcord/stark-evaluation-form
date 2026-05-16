@@ -21,6 +21,7 @@ import {
   getUserByOpenId,
   listAllUsers,
   updateUserRole,
+  updateUserStatus,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -45,7 +46,7 @@ async function devAuth(ctx: TrpcContext): Promise<User | null> {
     name: "Local Dev",
     email: "dev@local.test",
     loginMethod: "dev-bypass",
-    role: "admin",
+    role: "super_admin",
   });
   return (await getUserByOpenId(openId)) ?? null;
 }
@@ -57,6 +58,12 @@ const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
+  if (user.status === "disabled") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "帳號已停用,請聯絡管理員",
+    });
+  }
   return next({ ctx: { ...ctx, user } });
 });
 
@@ -65,8 +72,25 @@ const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
-  if (user.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "需要 admin 權限" });
+  if (user.status === "disabled") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "帳號已停用" });
+  }
+  if (user.role !== "super_admin" && user.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "需要管理員權限" });
+  }
+  return next({ ctx: { ...ctx, user } });
+});
+
+const superAdminProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const user = await devAuth(ctx);
+  if (!user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  if (user.role !== "super_admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "需要 super admin 權限",
+    });
   }
   return next({ ctx: { ...ctx, user } });
 });
@@ -163,17 +187,54 @@ export const appRouter = router({
         .input(
           z.object({
             id: z.number(),
-            role: z.enum(["user", "admin"]),
+            role: z.enum([
+              "super_admin",
+              "admin",
+              "therapist",
+              "assistant",
+              "viewer",
+            ]),
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (input.id === ctx.user.id && input.role === "user") {
+          if (
+            input.id === ctx.user.id &&
+            input.role !== "super_admin" &&
+            input.role !== "admin"
+          ) {
             return {
               success: false,
-              error: "不能把自己降級(避免最後一個 admin 失效)",
+              error: "不能把自己降為非管理員(避免最後一個 admin 失效)",
+            };
+          }
+          // Only super_admin can grant or revoke super_admin
+          if (
+            (input.role === "super_admin" || ctx.user.role !== "super_admin") &&
+            ctx.user.role !== "super_admin"
+          ) {
+            return {
+              success: false,
+              error: "只有 super admin 能授予或調整 super admin 權限",
             };
           }
           const ok = await updateUserRole(input.id, input.role);
+          return { success: ok };
+        }),
+      updateStatus: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            status: z.enum(["active", "disabled"]),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (input.id === ctx.user.id && input.status === "disabled") {
+            return {
+              success: false,
+              error: "不能停用自己的帳號",
+            };
+          }
+          const ok = await updateUserStatus(input.id, input.status);
           return { success: ok };
         }),
     }),
