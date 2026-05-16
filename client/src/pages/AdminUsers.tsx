@@ -5,7 +5,7 @@ import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { ChipToggle } from "@/components/atoms/ChipToggle";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import {
