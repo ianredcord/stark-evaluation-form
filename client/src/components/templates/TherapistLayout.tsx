@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Users,
   ClipboardList,
@@ -70,11 +71,25 @@ const NOTIF_DOT_COLOR = {
 
 export function TherapistLayout({
   activeKey = "integrated",
-  user = { name: "林昱辰", role: "物理治療師", initial: "林" },
+  user: userProp,
   children,
 }: TherapistLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user: authUser, logout, isAuthenticated } = useAuth();
+
+  // Derive user display from auth context, falling back to prop, then to a
+  // generic visitor label when no session exists.
+  const user =
+    userProp ??
+    (authUser
+      ? {
+          name: authUser.name?.trim() || authUser.email?.split("@")[0] || "Therapist",
+          role: authUser.role === "admin" ? "系統管理員" : "物理治療師",
+          initial: (authUser.name?.trim() || authUser.email || "?").charAt(0).toUpperCase(),
+        }
+      : { name: "訪客", role: "未登入", initial: "?" });
 
   return (
     <div className="flex min-h-screen bg-bg-page text-foreground font-body">
@@ -167,15 +182,44 @@ export function TherapistLayout({
             </a>
           </Link>
         </div>
-        <div className="px-3 py-3 border-t border-white/10 flex items-center gap-2">
-          <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-white/10 text-sm font-display font-semibold">
-            {user.initial}
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-white/60 truncate">{user.role}</p>
+        <div className="px-3 py-3 border-t border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-white/10 text-sm font-display font-semibold">
+              {user.initial}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user.name}</p>
+              <p className="text-xs text-white/60 truncate">{user.role}</p>
+            </div>
+            <button
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-label="User menu"
+              className="p-1 rounded hover:bg-white/10"
+            >
+              <ChevronDown className="w-4 h-4 text-white/60" />
+            </button>
           </div>
-          <ChevronDown className="w-4 h-4 text-white/60" />
+          {userMenuOpen && (
+            <div className="mt-2 rounded-md bg-white/10 p-1 space-y-0.5">
+              {isAuthenticated ? (
+                <button
+                  onClick={async () => {
+                    await logout();
+                    window.location.href = "/";
+                  }}
+                  className="w-full text-left px-2 py-1.5 rounded text-xs text-white/80 hover:bg-white/10"
+                >
+                  登出
+                </button>
+              ) : (
+                <Link href="/auth/login">
+                  <a className="block px-2 py-1.5 rounded text-xs text-white/80 hover:bg-white/10">
+                    登入
+                  </a>
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
