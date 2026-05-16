@@ -190,10 +190,22 @@ function SecuritySection() {
     <>
       <h2 className="font-display text-lg font-semibold">帳號安全</h2>
       <FieldRow
-        label="登入方式"
-        value="Google OAuth"
-        hint="Week 6 接 NextAuth 後啟用"
+        label="Google 登入"
+        value="尚未連結"
+        hint="使用診所 Google Workspace 帳號登入,跨裝置同步"
         action={<StatusPill status="warn" size="sm">即將上線</StatusPill>}
+      />
+      <FieldRow
+        label="LINE 登入"
+        value="尚未連結"
+        hint="使用 LINE 帳號登入,治療師工作流程內可直接 LINE 通知客戶"
+        action={<StatusPill status="warn" size="sm">即將上線</StatusPill>}
+      />
+      <FieldRow
+        label="目前登入方式"
+        value="Dev Bypass(開發模式)"
+        hint="ENABLE_DEV_AUTH_BYPASS=true · 接通 OAuth 後關閉"
+        action={<StatusPill status="neutral" size="sm">Dev</StatusPill>}
       />
       <FieldRow
         label="兩步驗證"
