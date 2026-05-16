@@ -69,12 +69,12 @@ export default function ClientReportPage() {
       onDownloadPdf={() => window.print()}
     >
       <motion.div
-        className="max-w-6xl mx-auto space-y-5"
+        className="max-w-6xl mx-auto space-y-5 scroll-smooth"
         variants={stagger}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} id="overview">
         <HeroScoreBlock
           clientName={demoClient.name}
           evaluationDate={r.evaluationDate}
@@ -87,7 +87,8 @@ export default function ClientReportPage() {
         </motion.div>
 
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4"
+          id="body-map"
+          className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4 scroll-mt-20"
           variants={fadeUp}
         >
           <PriorityFindingsList
@@ -112,7 +113,7 @@ export default function ClientReportPage() {
           />
         </motion.div>
 
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} id="plan" className="scroll-mt-20">
           <ActionPlanSection
             recommendations={r.recommendations}
             weekPlan={demoWeekPlan}

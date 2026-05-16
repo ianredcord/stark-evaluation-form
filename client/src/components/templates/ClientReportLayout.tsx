@@ -17,6 +17,7 @@ const SIDEBAR_NAV = [
   { key: "body-map", label: "身體地圖", icon: MapPin },
   { key: "posture", label: "姿勢分析", icon: PersonStanding },
   { key: "movement", label: "動作能力", icon: ActivityIcon },
+  { key: "neuromuscular", label: "神經肌肉", icon: Sparkles },
   { key: "composition", label: "體組成", icon: Scale },
   { key: "plan", label: "改善方案", icon: Sparkles },
 ] as const;
