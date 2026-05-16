@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { key: "clients", label: "客戶管理", icon: Users, href: "/" },
+  { key: "clients", label: "客戶管理", icon: Users, href: "/clients" },
   {
     key: "initial",
     label: "初評表",
@@ -28,10 +28,10 @@ const NAV = [
     key: "integrated",
     label: "整合評估",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/clients",
   },
   { key: "report", label: "報告產生", icon: FileText, href: "/prescriptions" },
-  { key: "schedule", label: "課程計畫", icon: CalendarDays, href: "/" },
+  { key: "schedule", label: "課程計畫", icon: CalendarDays, href: "/clients" },
 ] as const;
 
 export type TherapistLayoutProps = {
