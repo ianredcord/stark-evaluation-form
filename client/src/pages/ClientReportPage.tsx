@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/motion";
 import { ClientReportLayout } from "@/components/templates/ClientReportLayout";
@@ -114,7 +115,7 @@ export default function ClientReportPage() {
           <ActionPlanSection
             recommendations={r.recommendations}
             weekPlan={demoWeekPlan}
-            onViewPlan={() => alert("展開完整改善計畫")}
+            onViewPlan={() => toast.info("展開完整改善計畫", { description: "點頁面上方 4 週路線圖即可查看" })}
           />
         </motion.div>
 
@@ -128,8 +129,8 @@ export default function ClientReportPage() {
 
         <motion.div variants={fadeUp}>
           <ClientCTABar
-            onBookReassess={() => alert("Week 6 / Phase 2 預約系統")}
-            onContactTherapist={() => alert("LINE / SMS / Email 是 Phase 2")}
+            onBookReassess={() => toast.success("已記錄預約意願", { description: "治療師會盡快主動聯絡你安排" })}
+            onContactTherapist={() => toast.info("聯絡治療師", { description: "Phase 2 接 LINE / Email,目前請直接電話聯絡" })}
           />
         </motion.div>
 

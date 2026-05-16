@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useRoute } from "wouter";
+import { toast } from "sonner";
 import { useAutosave } from "@/lib/useAutosave";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { AssessmentHeader } from "@/components/organisms/AssessmentHeader";
@@ -508,10 +509,10 @@ export default function IntegratedAssessmentPage() {
           onNotesChange={setReportNotes}
           lastUpdatedBy={demoReportSummary.lastUpdatedBy}
           lastUpdatedAt={demoReportSummary.lastUpdatedAt}
-          onSaveDraft={() => alert("儲存草稿 — Week 4 接 tRPC")}
+          onSaveDraft={() => toast.success("草稿已儲存", { description: "Week 4 接 tRPC 後會寫回資料庫" })}
           onAssignPlan={() => setPrescriptionPickerOpen(true)}
           onGenerateReport={() => setGenerateReportOpen(true)}
-          onRefreshPreview={() => alert("Refresh — 預覽即時更新")}
+          onRefreshPreview={() => toast.info("預覽即時更新", { description: "白話說明會在客戶端同步顯示" })}
         />
         </div>
       </div>
