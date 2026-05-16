@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -81,9 +82,10 @@ export function GenerateReportDialog({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
+      toast.success("連結已複製", { description: shareUrl });
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // ignore
+      toast.error("複製失敗", { description: "請手動選取連結文字" });
     }
   };
 
@@ -198,7 +200,7 @@ export function GenerateReportDialog({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => alert("LINE 分享 — Phase 2")}
+                  onClick={() => toast.info("LINE 分享", { description: "Phase 2 接 LINE Notify / Messaging API" })}
                   className="gap-1.5"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -207,7 +209,7 @@ export function GenerateReportDialog({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => alert("Email 寄送 — Phase 2")}
+                  onClick={() => toast.info("Email 寄送", { description: "Phase 2 接 Resend / SendGrid" })}
                   className="gap-1.5"
                 >
                   <Mail className="w-4 h-4" />

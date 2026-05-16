@@ -1,0 +1,24 @@
+{
+  "name": "STARK 運動科學評估系統",
+  "short_name": "STARK",
+  "description": "治療師整合評估 + 客戶端互動報告",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1A2B4A",
+  "background_color": "#FAF7F2",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/stark-logo.webp",
+      "type": "image/webp",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ]
+}

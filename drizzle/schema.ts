@@ -26,7 +26,10 @@ export const evaluations = mysqlTable("evaluations", {
   
   // 關聯使用者
   userId: int("userId").notNull(),
-  
+
+  // 關聯客戶 (W4 新增 — nullable for backfill from existing rows)
+  clientId: int("clientId"),
+
   // 基本資料
   date: varchar("date", { length: 20 }),
   clientName: varchar("clientName", { length: 100 }),
@@ -86,7 +89,37 @@ export const evaluations = mysqlTable("evaluations", {
   // 簽名（Data URL 或 S3 URL;SignaturePad 產生的 base64 通常 500KB+,需 longtext)
   clientSignature: longtext("clientSignature"),
   coachSignature: longtext("coachSignature"),
-  
+
+  // === W4 新增:整合評估文字類 ===
+  chiefComplaint: text("chiefComplaint"),
+  clientGoals: text("clientGoals"),
+  plainExplanation: text("plainExplanation"),
+  interventionNotes: text("interventionNotes"),
+
+  // === W4 新增:整合評估結構化 ===
+  topThreeIssues: json("topThreeIssues"),       // [{ title, description }, ...]
+  recommendedPlan: json("recommendedPlan"),     // string[]
+  interventionTypes: json("interventionTypes"), // Record<string, boolean>
+  weekPlan: json("weekPlan"),                   // WeekPlan[]
+  reassessDate: varchar("reassessDate", { length: 20 }),
+  riskLevel: mysqlEnum("riskLevel", ["low", "mid", "high"]),
+
+  // === W4 新增:客戶端視覺欄位 ===
+  overallScore: int("overallScore"),
+  subScores: json("subScores"),                 // { posture, movement, neuromuscular, composition: number }
+  bodyRiskMap: json("bodyRiskMap"),             // { hotspots: BodyHotspot[], legend: ... }
+  strengths: json("strengths"),                 // string[]
+  inBodyData: json("inBodyData"),
+  assignedTherapistId: varchar("assignedTherapistId", { length: 64 }),
+
+  // === W4 新增:處方 (Week 5) ===
+  prescriptions: json("prescriptions"),         // PrescriptionSelection[]
+
+  // === W4 新增:分享連結 ===
+  shareCode: varchar("shareCode", { length: 20 }),
+  shareCodeCreatedAt: timestamp("shareCodeCreatedAt"),
+  lastViewedByClient: timestamp("lastViewedByClient"),
+
   // 時間戳記
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -124,3 +157,69 @@ export const evaluationTemplates = mysqlTable("evaluationTemplates", {
 
 export type EvaluationTemplate = typeof evaluationTemplates.$inferSelect;
 export type InsertEvaluationTemplate = typeof evaluationTemplates.$inferInsert;
+
+/**
+ * 客戶實體 (W4 新增). evaluations 可有多筆對應同一 client.id.
+ * Plan v1.2 Section 3.2 — 從 evaluations.basicInfo 拆出.
+ */
+export const clients = mysqlTable("clients", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // 建立此客戶檔案的治療師
+  name: varchar("name", { length: 100 }).notNull(),
+  birthdate: varchar("birthdate", { length: 20 }),
+  gender: varchar("gender", { length: 16 }),
+  height: int("height"),
+  weight: int("weight"),
+  phone: varchar("phone", { length: 32 }),
+  primaryConcern: text("primaryConcern"),
+  primaryTherapistId: varchar("primaryTherapistId", { length: 64 }),
+  tenantId: varchar("tenantId", { length: 64 }), // Phase 2 多診所
+  status: mysqlEnum("status", ["active", "pending", "completed"])
+    .default("active")
+    .notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = typeof clients.$inferInsert;
+
+/**
+ * 處方知識庫 (W5 新增).
+ * Mirror of shared/prescriptionKB.ts shape — admin CRUD via /prescriptions.
+ */
+export const prescriptionKB = mysqlTable("prescriptionKB", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // 建立者 (null = system seed)
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  nameEn: varchar("nameEn", { length: 100 }),
+  category: mysqlEnum("category", [
+    "core",
+    "hip",
+    "shoulder",
+    "balance",
+    "mobility",
+    "redcord",
+  ]).notNull(),
+  difficulty: mysqlEnum("difficulty", [
+    "beginner",
+    "intermediate",
+    "advanced",
+  ]).notNull(),
+  defaultSets: int("defaultSets").notNull(),
+  defaultReps: varchar("defaultReps", { length: 32 }).notNull(),
+  videoUrl: varchar("videoUrl", { length: 500 }),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 500 }),
+  thumbnailEmoji: varchar("thumbnailEmoji", { length: 16 }),
+  targetAreas: json("targetAreas"), // string[]
+  description: text("description"),
+  tag: varchar("tag", { length: 64 }),
+  cues: json("cues"), // string[]
+  contraindications: json("contraindications"), // string[]
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PrescriptionKBRow = typeof prescriptionKB.$inferSelect;
+export type InsertPrescriptionKBRow = typeof prescriptionKB.$inferInsert;

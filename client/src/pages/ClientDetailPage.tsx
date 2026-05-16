@@ -1,4 +1,5 @@
 import { useRoute, Link } from "wouter";
+import { toast } from "sonner";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
@@ -106,7 +107,7 @@ export default function ClientDetailPage() {
             </Link>
             <Button
               variant="outline"
-              onClick={() => alert("複評排程 — Phase 2")}
+              onClick={() => toast.info("複評排程", { description: "Phase 2 接行事曆 API" })}
               className="gap-1.5"
             >
               <Calendar className="w-4 h-4" />

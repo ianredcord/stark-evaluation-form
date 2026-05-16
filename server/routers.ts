@@ -104,6 +104,27 @@ const evaluationInputSchema = z.object({
   
   clientSignature: z.string().optional(),
   coachSignature: z.string().optional(),
+
+  // === W4 新增:整合評估 ===
+  clientId: z.number().optional(),
+  chiefComplaint: z.string().optional(),
+  clientGoals: z.string().optional(),
+  plainExplanation: z.string().optional(),
+  interventionNotes: z.string().optional(),
+  topThreeIssues: z.any().optional(),
+  recommendedPlan: z.any().optional(),
+  interventionTypes: z.any().optional(),
+  weekPlan: z.any().optional(),
+  reassessDate: z.string().optional(),
+  riskLevel: z.enum(["low", "mid", "high"]).optional(),
+  overallScore: z.number().int().min(0).max(100).optional(),
+  subScores: z.any().optional(),
+  bodyRiskMap: z.any().optional(),
+  strengths: z.any().optional(),
+  inBodyData: z.any().optional(),
+  assignedTherapistId: z.string().optional(),
+  prescriptions: z.any().optional(),
+  shareCode: z.string().optional(),
 });
 
 export const appRouter = router({

@@ -79,40 +79,48 @@ export function HeroScoreBlock({
           )}
         </div>
 
-        {/* 4 sub-score grid */}
+        {/* 4 sub-score grid — anchored for sidebar nav */}
         <div className="grid grid-cols-2 gap-3">
-          <SubScoreCard
-            label="姿勢結構"
-            value={subScores.posture.value}
-            icon={<Bone />}
-            iconBg="primary"
-            status={{ label: subScores.posture.toneLabel, tone: subScores.posture.tone }}
-            trend={subScores.posture.value - subScores.posture.last}
-          />
-          <SubScoreCard
-            label="動作功能"
-            value={subScores.movement.value}
-            icon={<Activity />}
-            iconBg="good"
-            status={{ label: subScores.movement.toneLabel, tone: subScores.movement.tone }}
-            trend={subScores.movement.value - subScores.movement.last}
-          />
-          <SubScoreCard
-            label="神經肌肉控制"
-            value={subScores.neuromuscular.value}
-            icon={<Brain />}
-            iconBg="violet"
-            status={{ label: subScores.neuromuscular.toneLabel, tone: subScores.neuromuscular.tone }}
-            trend={subScores.neuromuscular.value - subScores.neuromuscular.last}
-          />
-          <SubScoreCard
-            label="體組成"
-            value={subScores.composition.value}
-            icon={<Scale />}
-            iconBg="warm"
-            status={{ label: subScores.composition.toneLabel, tone: subScores.composition.tone }}
-            trend={subScores.composition.value - subScores.composition.last}
-          />
+          <div id="posture" className="scroll-mt-20">
+            <SubScoreCard
+              label="姿勢結構"
+              value={subScores.posture.value}
+              icon={<Bone />}
+              iconBg="primary"
+              status={{ label: subScores.posture.toneLabel, tone: subScores.posture.tone }}
+              trend={subScores.posture.value - subScores.posture.last}
+            />
+          </div>
+          <div id="movement" className="scroll-mt-20">
+            <SubScoreCard
+              label="動作功能"
+              value={subScores.movement.value}
+              icon={<Activity />}
+              iconBg="good"
+              status={{ label: subScores.movement.toneLabel, tone: subScores.movement.tone }}
+              trend={subScores.movement.value - subScores.movement.last}
+            />
+          </div>
+          <div id="neuromuscular" className="scroll-mt-20">
+            <SubScoreCard
+              label="神經肌肉控制"
+              value={subScores.neuromuscular.value}
+              icon={<Brain />}
+              iconBg="violet"
+              status={{ label: subScores.neuromuscular.toneLabel, tone: subScores.neuromuscular.tone }}
+              trend={subScores.neuromuscular.value - subScores.neuromuscular.last}
+            />
+          </div>
+          <div id="composition" className="scroll-mt-20">
+            <SubScoreCard
+              label="體組成"
+              value={subScores.composition.value}
+              icon={<Scale />}
+              iconBg="warm"
+              status={{ label: subScores.composition.toneLabel, tone: subScores.composition.tone }}
+              trend={subScores.composition.value - subScores.composition.last}
+            />
+          </div>
         </div>
       </div>
     </section>

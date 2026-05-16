@@ -222,9 +222,57 @@ export interface TrainingPlan {
   coachSignature: string; // 簽名 Data URL
 }
 
+// === W4 新增:整合評估結構化型別 ===
+
+export interface TopIssue {
+  title: string;
+  description: string;
+}
+
+export type RiskLevel = "low" | "mid" | "high";
+
+export interface WeekPlanItem {
+  n: number;
+  weekLabel: string;
+  phase: string;
+  items: string[];
+}
+
+export interface SubScores {
+  posture: number;
+  movement: number;
+  neuromuscular: number;
+  composition: number;
+}
+
+export interface BodyHotspotData {
+  x: number;
+  y: number;
+  color?: "good" | "warn" | "danger" | "primary";
+  r?: number;
+}
+
+export interface BodyRiskMapData {
+  hotspotsFront: BodyHotspotData[];
+  hotspotsBack: BodyHotspotData[];
+}
+
+export interface StrengthItem {
+  label: string;
+  hint?: string;
+}
+
+export interface PrescriptionSelection {
+  prescriptionId: string;
+  sets: number;
+  reps: string;
+  notes?: string;
+}
+
 // 完整評估表單資料
 export interface EvaluationFormData {
   id?: number;
+  clientId?: number;
   basicInfo: BasicInfo;
   motiPhysio: MotiPhysioReport;
   motiRiskValues: MotiRiskValues;
@@ -232,6 +280,37 @@ export interface EvaluationFormData {
   redcord: RedcordAssessment;
   ronfic: RonficAssessment;
   trainingPlan: TrainingPlan;
+
+  // === W4 新增:整合評估文字 ===
+  chiefComplaint?: string;
+  clientGoals?: string;
+  plainExplanation?: string;
+  interventionNotes?: string;
+
+  // === W4 新增:整合評估結構化 ===
+  topThreeIssues?: TopIssue[];
+  recommendedPlan?: string[];
+  interventionTypes?: Record<string, boolean>;
+  weekPlan?: WeekPlanItem[];
+  reassessDate?: string;
+  riskLevel?: RiskLevel;
+
+  // === W4 新增:客戶端視覺欄位 ===
+  overallScore?: number;
+  subScores?: SubScores;
+  bodyRiskMap?: BodyRiskMapData;
+  strengths?: StrengthItem[];
+  inBodyData?: Record<string, unknown>;
+  assignedTherapistId?: string;
+
+  // === W4 新增:處方 ===
+  prescriptions?: PrescriptionSelection[];
+
+  // === W4 新增:分享連結 ===
+  shareCode?: string;
+  shareCodeCreatedAt?: string;
+  lastViewedByClient?: string;
+
   createdAt?: string;
   updatedAt?: string;
   createdBy?: number;

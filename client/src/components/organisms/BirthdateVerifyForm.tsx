@@ -5,11 +5,14 @@ import { Lock } from "lucide-react";
 export type BirthdateVerifyFormProps = {
   expected: string; // YYYY-MM-DD
   onVerified: () => void;
+  /** Show a yellow info banner with the expected birthdate (for demo / public showcase). */
+  demoHint?: boolean;
 };
 
 export function BirthdateVerifyForm({
   expected,
   onVerified,
+  demoHint = false,
 }: BirthdateVerifyFormProps) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,17 @@ export function BirthdateVerifyForm({
             請輸入生日以查看您的整合諮詢報告
           </p>
         </div>
+
+        {demoHint && (
+          <div className="rounded-md bg-status-warn-bg text-status-warn p-3 text-xs">
+            <p className="font-semibold">Demo 模式</p>
+            <p className="opacity-90 mt-0.5">
+              這是公開 demo 連結,生日請輸入{" "}
+              <code className="font-mono font-semibold">{expected}</code>{" "}
+              即可進入報告。
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="birthdate">
             生日

@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { FileText, Loader2, Plus, Trash2, Edit, Copy } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+import { TherapistLayout } from "@/components/templates/TherapistLayout";
 
 export default function Templates() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
@@ -115,57 +116,38 @@ export default function Templates() {
   // 載入中狀態
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <TherapistLayout activeKey="checks">
+        <div className="p-12 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+        </div>
+      </TherapistLayout>
     );
   }
 
   // 未登入狀態
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>請先登入</CardTitle>
-            <CardDescription>您需要登入才能管理範本</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button asChild>
-              <a href={getLoginUrl()}>登入</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <TherapistLayout activeKey="checks">
+        <div className="p-6 flex justify-center">
+          <Card className="w-full max-w-md mt-12">
+            <CardHeader className="text-center">
+              <CardTitle>請先登入</CardTitle>
+              <CardDescription>您需要登入才能管理範本</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Button asChild>
+                <a href={getLoginUrl()}>登入</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </TherapistLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b border-border sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-primary">史塔克</h1>
-                <p className="text-xs text-muted-foreground tracking-widest">STARK WORKS</p>
-              </div>
-            </div>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="outline">返回首頁</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+    <TherapistLayout activeKey="checks">
+      <main className="p-4 sm:p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold text-foreground">評估範本管理</h2>
@@ -332,6 +314,6 @@ export default function Templates() {
           </DialogContent>
         </Dialog>
       </main>
-    </div>
+    </TherapistLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,7 @@ export default function PrescriptionsAdmin() {
             </p>
           </div>
           <Button
-            onClick={() => alert("新增處方 — Week 5 Day 4 完整 CRUD")}
+            onClick={() => toast.info("新增處方", { description: "Week 5 Day 4 接完整 CRUD" })}
             className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
           >
             <Plus className="w-4 h-4" />
@@ -130,7 +131,7 @@ export default function PrescriptionsAdmin() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => alert(`編輯 ${p.name} — Week 5 Day 4 CRUD`)}
+                    onClick={() => toast.info(`編輯 ${p.name}`, { description: "Week 5 Day 4 接完整 CRUD" })}
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                   >
                     <Pencil className="w-3.5 h-3.5" />

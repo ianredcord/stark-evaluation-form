@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/motion";
 import { ClientReportLayout } from "@/components/templates/ClientReportLayout";
@@ -37,6 +38,7 @@ export default function ClientReportPage() {
     return (
       <BirthdateVerifyForm
         expected={demoClientReport.expectedBirthdate}
+        demoHint
         onVerified={() => {
           sessionStorage.setItem(STORAGE_KEY + ":" + shareCode, "1");
           setVerified(true);
@@ -64,15 +66,15 @@ export default function ClientReportPage() {
   return (
     <ClientReportLayout
       shareCode={shareCode}
-      onDownloadPdf={() => alert("Week 6 啟用 Puppeteer PDF")}
+      onDownloadPdf={() => window.print()}
     >
       <motion.div
-        className="max-w-6xl mx-auto space-y-5"
+        className="max-w-6xl mx-auto space-y-5 scroll-smooth"
         variants={stagger}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} id="overview">
         <HeroScoreBlock
           clientName={demoClient.name}
           evaluationDate={r.evaluationDate}
@@ -85,7 +87,8 @@ export default function ClientReportPage() {
         </motion.div>
 
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4"
+          id="body-map"
+          className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr] gap-4 scroll-mt-20"
           variants={fadeUp}
         >
           <PriorityFindingsList
@@ -110,11 +113,11 @@ export default function ClientReportPage() {
           />
         </motion.div>
 
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} id="plan" className="scroll-mt-20">
           <ActionPlanSection
             recommendations={r.recommendations}
             weekPlan={demoWeekPlan}
-            onViewPlan={() => alert("展開完整改善計畫")}
+            onViewPlan={() => toast.info("展開完整改善計畫", { description: "點頁面上方 4 週路線圖即可查看" })}
           />
         </motion.div>
 
@@ -128,8 +131,8 @@ export default function ClientReportPage() {
 
         <motion.div variants={fadeUp}>
           <ClientCTABar
-            onBookReassess={() => alert("Week 6 / Phase 2 預約系統")}
-            onContactTherapist={() => alert("LINE / SMS / Email 是 Phase 2")}
+            onBookReassess={() => toast.success("已記錄預約意願", { description: "治療師會盡快主動聯絡你安排" })}
+            onContactTherapist={() => toast.info("聯絡治療師", { description: "Phase 2 接 LINE / Email,目前請直接電話聯絡" })}
           />
         </motion.div>
 
