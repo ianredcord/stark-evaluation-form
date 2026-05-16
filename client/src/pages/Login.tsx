@@ -67,15 +67,11 @@ export default function Login() {
         <div className="space-y-2">
           <Button
             onClick={() => (window.location.href = GOOGLE_AUTH_URL)}
-            disabled
             className="w-full gap-2 bg-white text-foreground border hover:bg-muted"
             variant="outline"
           >
             <GoogleLogo />
             使用 Google 登入
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              即將上線
-            </span>
           </Button>
 
           <Button

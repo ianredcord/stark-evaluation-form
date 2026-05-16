@@ -191,9 +191,9 @@ function SecuritySection() {
       <h2 className="font-display text-lg font-semibold">帳號安全</h2>
       <FieldRow
         label="Google 登入"
-        value="尚未連結"
+        value="已啟用"
         hint="使用診所 Google Workspace 帳號登入,跨裝置同步"
-        action={<StatusPill status="warn" size="sm">即將上線</StatusPill>}
+        action={<StatusPill status="good" size="sm">已連線</StatusPill>}
       />
       <FieldRow
         label="LINE 登入"
