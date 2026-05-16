@@ -55,7 +55,7 @@ export default function Login() {
             使用 Google 登入(Phase 2)
           </Button>
           <Button
-            onClick={() => (window.location.href = "/")}
+            onClick={() => (window.location.href = "/clients")}
             className="w-full gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
           >
             <LogIn className="w-4 h-4" />
