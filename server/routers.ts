@@ -19,6 +19,8 @@ import {
   deleteTemplate,
   upsertUser,
   getUserByOpenId,
+  listAllUsers,
+  updateUserRole,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -54,6 +56,17 @@ const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const user = await devAuth(ctx);
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  return next({ ctx: { ...ctx, user } });
+});
+
+const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const user = await devAuth(ctx);
+  if (!user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  if (user.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "需要 admin 權限" });
   }
   return next({ ctx: { ...ctx, user } });
 });
@@ -137,6 +150,32 @@ export const appRouter = router({
       return {
         success: true,
       } as const;
+    }),
+  }),
+
+  // Admin-only: user management
+  admin: router({
+    users: router({
+      list: adminProcedure.query(async () => {
+        return listAllUsers();
+      }),
+      updateRole: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            role: z.enum(["user", "admin"]),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (input.id === ctx.user.id && input.role === "user") {
+            return {
+              success: false,
+              error: "不能把自己降級(避免最後一個 admin 失效)",
+            };
+          }
+          const ok = await updateUserRole(input.id, input.role);
+          return { success: ok };
+        }),
     }),
   }),
 

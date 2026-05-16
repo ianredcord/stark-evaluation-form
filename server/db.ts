@@ -279,6 +279,33 @@ export async function updateTemplate(
 }
 
 /**
+ * 列出所有 user (admin only).
+ */
+export async function listAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.lastSignedIn));
+}
+
+/**
+ * 更新 user role (admin only).
+ */
+export async function updateUserRole(
+  id: number,
+  role: "user" | "admin"
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.update(users).set({ role }).where(eq(users.id, id));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update user role:", error);
+    return false;
+  }
+}
+
+/**
  * 刪除範本
  */
 export async function deleteTemplate(id: number): Promise<boolean> {
