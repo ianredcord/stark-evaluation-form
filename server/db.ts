@@ -56,13 +56,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = user.role;
       updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
-      values.role = "super_admin";
-      updateSet.role = "super_admin";
-    }
-
-    if (user.status !== undefined) {
-      values.status = user.status;
-      updateSet.status = user.status;
+      values.role = 'admin';
+      updateSet.role = 'admin';
     }
 
     if (!values.lastSignedIn) {
@@ -297,7 +292,7 @@ export async function listAllUsers() {
  */
 export async function updateUserRole(
   id: number,
-  role: "super_admin" | "admin" | "therapist" | "assistant" | "viewer"
+  role: "user" | "admin"
 ): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
@@ -306,24 +301,6 @@ export async function updateUserRole(
     return true;
   } catch (error) {
     console.error("[Database] Failed to update user role:", error);
-    return false;
-  }
-}
-
-/**
- * 更新 user status (admin only).
- */
-export async function updateUserStatus(
-  id: number,
-  status: "active" | "disabled"
-): Promise<boolean> {
-  const db = await getDb();
-  if (!db) return false;
-  try {
-    await db.update(users).set({ status }).where(eq(users.id, id));
-    return true;
-  } catch (error) {
-    console.error("[Database] Failed to update user status:", error);
     return false;
   }
 }
