@@ -1,2 +1,0 @@
-ALTER TABLE `users` MODIFY COLUMN `role` enum('super_admin','admin','therapist','assistant','viewer','user') NOT NULL DEFAULT 'therapist';--> statement-breakpoint
-ALTER TABLE `users` ADD `status` enum('active','disabled') DEFAULT 'active' NOT NULL;

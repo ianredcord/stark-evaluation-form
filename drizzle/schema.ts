@@ -9,46 +9,11 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", [
-    "super_admin",
-    "admin",
-    "therapist",
-    "assistant",
-    "viewer",
-    // legacy compat — pre-migration rows
-    "user",
-  ])
-    .default("therapist")
-    .notNull(),
-  status: mysqlEnum("status", ["active", "disabled"])
-    .default("active")
-    .notNull(),
+  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
-
-export const ALL_ROLES = [
-  "super_admin",
-  "admin",
-  "therapist",
-  "assistant",
-  "viewer",
-] as const;
-export type UserRole = (typeof ALL_ROLES)[number];
-export type UserStatus = "active" | "disabled";
-
-export const ROLE_RANK: Record<UserRole, number> = {
-  super_admin: 50,
-  admin: 40,
-  therapist: 30,
-  assistant: 20,
-  viewer: 10,
-};
-
-export function isAdminRole(role: string | null | undefined): boolean {
-  return role === "super_admin" || role === "admin";
-}
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;

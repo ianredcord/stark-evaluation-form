@@ -14,19 +14,10 @@ import {
   ShieldOff,
   Loader2,
   RefreshCw,
-  Power,
-  PowerOff,
 } from "lucide-react";
 
 type LoginMethod = "google" | "line" | "dev-bypass" | string | null | undefined;
-type UserRole =
-  | "super_admin"
-  | "admin"
-  | "therapist"
-  | "assistant"
-  | "viewer"
-  | "user";
-type UserStatus = "active" | "disabled";
+type Role = "user" | "admin";
 type FilterKey = "all" | LoginMethod;
 
 const METHOD_LABEL: Record<string, string> = {
@@ -39,53 +30,6 @@ const METHOD_TONE: Record<string, "good" | "warn" | "neutral"> = {
   google: "good",
   line: "good",
   "dev-bypass": "warn",
-};
-
-const ROLE_OPTIONS: { value: Exclude<UserRole, "user">; label: string; hint: string }[] =
-  [
-    {
-      value: "super_admin",
-      label: "Super Admin",
-      hint: "全權 · 可管理 admin",
-    },
-    {
-      value: "admin",
-      label: "管理員",
-      hint: "管理一般使用者 + 系統設定",
-    },
-    {
-      value: "therapist",
-      label: "治療師",
-      hint: "建客戶 / 開評估 / 開處方(預設)",
-    },
-    {
-      value: "assistant",
-      label: "助理",
-      hint: "只能看,不能編輯",
-    },
-    {
-      value: "viewer",
-      label: "唯讀",
-      hint: "唯讀(實習 / 觀察)",
-    },
-  ];
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  super_admin: "Super Admin",
-  admin: "管理員",
-  therapist: "治療師",
-  assistant: "助理",
-  viewer: "唯讀",
-  user: "(舊版 user)",
-};
-
-const ROLE_TONE: Record<UserRole, "good" | "warn" | "danger" | "neutral"> = {
-  super_admin: "danger",
-  admin: "good",
-  therapist: "neutral",
-  assistant: "neutral",
-  viewer: "neutral",
-  user: "warn",
 };
 
 function formatRelative(d: Date | string | null | undefined): string {
@@ -107,28 +51,14 @@ export default function AdminUsers() {
   const [, navigate] = useLocation();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [query, setQuery] = useState("");
-  const [openRoleMenu, setOpenRoleMenu] = useState<number | null>(null);
 
   const usersQuery = trpc.admin.users.list.useQuery(undefined, {
-    enabled:
-      !!me && (me.role === "super_admin" || me.role === "admin"),
+    enabled: !!me && me.role === "admin",
   });
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
     onSuccess: (data) => {
       if (data.success) {
         toast.success("角色已更新");
-        usersQuery.refetch();
-      } else {
-        toast.error("更新失敗", { description: data.error ?? "未知錯誤" });
-      }
-      setOpenRoleMenu(null);
-    },
-    onError: (e) => toast.error("更新失敗", { description: e.message }),
-  });
-  const updateStatusMutation = trpc.admin.users.updateStatus.useMutation({
-    onSuccess: (data) => {
-      if (data.success) {
-        toast.success("狀態已更新");
         usersQuery.refetch();
       } else {
         toast.error("更新失敗", { description: data.error ?? "未知錯誤" });
@@ -147,10 +77,7 @@ export default function AdminUsers() {
     );
   }
 
-  const myRole = me?.role as UserRole | undefined;
-  const isAdmin = myRole === "super_admin" || myRole === "admin";
-
-  if (!me || !isAdmin) {
+  if (!me || me.role !== "admin") {
     return (
       <TherapistLayout activeKey="integrated">
         <div className="p-6 sm:p-12 max-w-md mx-auto text-center space-y-3">
@@ -179,39 +106,20 @@ export default function AdminUsers() {
     );
   });
 
-  const adminCount = users.filter((u) =>
-    ["super_admin", "admin"].includes(u.role)
-  ).length;
-  const disabledCount = users.filter((u) => u.status === "disabled").length;
+  const adminCount = users.filter((u) => u.role === "admin").length;
   const recentCount = users.filter((u) => {
     if (!u.lastSignedIn) return false;
     const d = new Date(u.lastSignedIn);
     return Date.now() - d.getTime() < 7 * 24 * 60 * 60 * 1000;
   }).length;
 
-  const handleRoleChange = (id: number, role: Exclude<UserRole, "user">) => {
-    if (!confirm(`把這位使用者改為「${ROLE_LABEL[role]}」?`)) return;
-    updateRoleMutation.mutate({ id, role });
-  };
-
-  const handleStatusToggle = (id: number, current: UserStatus) => {
-    const next: UserStatus = current === "active" ? "disabled" : "active";
-    const verb = next === "disabled" ? "停用" : "啟用";
-    if (!confirm(`確定${verb}這個帳號?${next === "disabled" ? "(停用後該使用者無法登入)" : ""}`)) {
+  const handleRoleChange = (id: number, role: Role) => {
+    if (
+      !confirm(role === "admin" ? "把這位使用者升級為 admin?" : "把這位 admin 降為一般使用者?")
+    ) {
       return;
     }
-    updateStatusMutation.mutate({ id, status: next });
-  };
-
-  // Whether current user can grant/change roles of other user
-  const canChangeRole = (target: { role: string; id: number }) => {
-    // Self: limited (server-side checks anyway)
-    if (target.id === me.id) {
-      return target.role === "super_admin" || target.role === "admin";
-    }
-    // Non-super_admin cannot touch super_admin
-    if (target.role === "super_admin" && myRole !== "super_admin") return false;
-    return true;
+    updateRoleMutation.mutate({ id, role });
   };
 
   return (
@@ -226,10 +134,7 @@ export default function AdminUsers() {
               </h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              5 種角色階層 · 啟用 / 停用帳號 · 你的角色:
-              <span className="ml-1 font-semibold">
-                {ROLE_LABEL[myRole ?? "viewer"]}
-              </span>
+              查看所有登入過系統的帳號 · 管理角色權限
             </p>
           </div>
           <Button
@@ -246,17 +151,31 @@ export default function AdminUsers() {
           </Button>
         </header>
 
+        {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard label="使用者總數" value={users.length} />
-          <KpiCard label="管理員" value={adminCount} tone="good" hint="super + admin" />
-          <KpiCard label="近 7 天活躍" value={recentCount} tone="good" />
           <KpiCard
-            label="已停用"
-            value={disabledCount}
-            tone={disabledCount > 0 ? "danger" : undefined}
+            label="管理員"
+            value={adminCount}
+            tone="good"
+            hint="可進入此頁"
+          />
+          <KpiCard
+            label="近 7 天活躍"
+            value={recentCount}
+            tone="good"
+            hint="lastSignedIn 統計"
+          />
+          <KpiCard
+            label="登入方式"
+            value={
+              new Set(users.map((u) => u.loginMethod || "unknown")).size
+            }
+            hint="dev / google / line ..."
           />
         </div>
 
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -275,18 +194,31 @@ export default function AdminUsers() {
             >
               全部({users.length})
             </ChipToggle>
-            <ChipToggle size="sm" selected={filter === "google"} onToggle={() => setFilter("google")}>
+            <ChipToggle
+              size="sm"
+              selected={filter === "google"}
+              onToggle={() => setFilter("google")}
+            >
               Google
             </ChipToggle>
-            <ChipToggle size="sm" selected={filter === "line"} onToggle={() => setFilter("line")}>
+            <ChipToggle
+              size="sm"
+              selected={filter === "line"}
+              onToggle={() => setFilter("line")}
+            >
               LINE
             </ChipToggle>
-            <ChipToggle size="sm" selected={filter === "dev-bypass"} onToggle={() => setFilter("dev-bypass")}>
+            <ChipToggle
+              size="sm"
+              selected={filter === "dev-bypass"}
+              onToggle={() => setFilter("dev-bypass")}
+            >
               Dev Bypass
             </ChipToggle>
           </div>
         </div>
 
+        {/* User table */}
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -295,8 +227,8 @@ export default function AdminUsers() {
                   <th className="text-left px-4 py-3 font-medium">使用者</th>
                   <th className="text-left px-4 py-3 font-medium">登入方式</th>
                   <th className="text-left px-4 py-3 font-medium">角色</th>
-                  <th className="text-left px-4 py-3 font-medium">狀態</th>
                   <th className="text-left px-4 py-3 font-medium">最後登入</th>
+                  <th className="text-left px-4 py-3 font-medium">建立日期</th>
                   <th className="text-right px-4 py-3 font-medium">動作</th>
                 </tr>
               </thead>
@@ -310,7 +242,10 @@ export default function AdminUsers() {
                 )}
                 {!usersQuery.isLoading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="p-8 text-center text-muted-foreground"
+                    >
                       沒有符合條件的使用者
                     </td>
                   </tr>
@@ -318,22 +253,14 @@ export default function AdminUsers() {
                 {filtered.map((u) => {
                   const method = (u.loginMethod ?? "unknown") as LoginMethod;
                   const isMe = u.id === me.id;
-                  const role = u.role as UserRole;
-                  const status = (u.status ?? "active") as UserStatus;
-                  const disabled = status === "disabled";
-                  const editable = canChangeRole({ role, id: u.id });
                   return (
-                    <tr
-                      key={u.id}
-                      className={cn(
-                        "hover:bg-muted/50",
-                        disabled && "opacity-60"
-                      )}
-                    >
+                    <tr key={u.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display font-semibold text-xs">
-                            {(u.name || u.email || "?").charAt(0).toUpperCase()}
+                            {(u.name || u.email || "?")
+                              .charAt(0)
+                              .toUpperCase()}
                           </span>
                           <div className="min-w-0">
                             <p className="font-medium truncate flex items-center gap-1.5">
@@ -352,102 +279,50 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-4 py-3">
                         <StatusPill
-                          status={METHOD_TONE[method as string] ?? "neutral"}
+                          status={
+                            METHOD_TONE[method as string] ?? "neutral"
+                          }
                           size="sm"
                         >
                           {METHOD_LABEL[method as string] ?? method ?? "未知"}
                         </StatusPill>
                       </td>
                       <td className="px-4 py-3">
-                        <StatusPill status={ROLE_TONE[role]} size="sm">
-                          {ROLE_LABEL[role] ?? role}
-                        </StatusPill>
-                      </td>
-                      <td className="px-4 py-3">
                         <StatusPill
-                          status={disabled ? "danger" : "good"}
+                          status={u.role === "admin" ? "good" : "neutral"}
                           size="sm"
                         >
-                          {disabled ? "停用" : "啟用"}
+                          {u.role === "admin" ? "管理員" : "使用者"}
                         </StatusPill>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
                         {formatRelative(u.lastSignedIn)}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground tabular-nums">
+                        {formatRelative(u.createdAt)}
+                      </td>
                       <td className="px-4 py-3 text-right">
-                        <div className="inline-flex items-center gap-1 relative">
+                        {u.role === "admin" ? (
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={!editable || updateRoleMutation.isPending}
-                            onClick={() =>
-                              setOpenRoleMenu(openRoleMenu === u.id ? null : u.id)
-                            }
+                            disabled={isMe || updateRoleMutation.isPending}
+                            onClick={() => handleRoleChange(u.id, "user")}
                             className="text-xs"
                           >
-                            變更角色
+                            降為使用者
                           </Button>
-                          {openRoleMenu === u.id && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-40"
-                                onClick={() => setOpenRoleMenu(null)}
-                              />
-                              <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border bg-card shadow-xl z-50 py-1">
-                                {ROLE_OPTIONS.map((opt) => {
-                                  const isCurrent = role === opt.value;
-                                  const grantingSuperAdmin =
-                                    opt.value === "super_admin" &&
-                                    myRole !== "super_admin";
-                                  const disabledOpt =
-                                    isCurrent || grantingSuperAdmin;
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      disabled={disabledOpt}
-                                      onClick={() =>
-                                        handleRoleChange(u.id, opt.value)
-                                      }
-                                      className={cn(
-                                        "w-full text-left px-3 py-2 text-xs hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-start justify-between gap-2",
-                                        isCurrent && "bg-bg-subtle"
-                                      )}
-                                    >
-                                      <div>
-                                        <p className="font-medium">
-                                          {opt.label}
-                                          {isCurrent && (
-                                            <span className="ml-1 text-[10px] text-status-good">✓</span>
-                                          )}
-                                        </p>
-                                        <p className="text-[11px] text-muted-foreground">
-                                          {opt.hint}
-                                        </p>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </>
-                          )}
-                          <button
-                            type="button"
-                            disabled={isMe || updateStatusMutation.isPending}
-                            onClick={() => handleStatusToggle(u.id, status)}
-                            aria-label={disabled ? "啟用" : "停用"}
-                            className={cn(
-                              "p-1.5 rounded hover:bg-muted",
-                              "disabled:opacity-40 disabled:cursor-not-allowed",
-                              disabled ? "text-status-danger" : "text-status-good"
-                            )}
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={updateRoleMutation.isPending}
+                            onClick={() => handleRoleChange(u.id, "admin")}
+                            className="text-xs"
                           >
-                            {disabled ? (
-                              <PowerOff className="w-4 h-4" />
-                            ) : (
-                              <Power className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
+                            升為管理員
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -457,22 +332,10 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-bg-page p-4 text-xs text-muted-foreground space-y-1">
-          <p>
-            <strong className="text-foreground">5 角色階層</strong>(由高到低):
-            Super Admin → 管理員 → 治療師 → 助理 → 唯讀
-          </p>
-          <p>
-            <strong className="text-foreground">Super Admin</strong> 才能授予 / 撤銷
-            Super Admin 權限,管理員只能管理 治療師 / 助理 / 唯讀。
-          </p>
-          <p>
-            <strong className="text-foreground">停用</strong>:該帳號無法登入(下次重新整理會被踢出),不會刪除資料。
-          </p>
-          <p>
-            <strong className="text-foreground">不能</strong> 把自己降級或停用(避免最後一個 admin 失效)。
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          說明:這個頁面只有 <code>role=admin</code> 能看到。
+          目前使用 Google / LINE / Dev Bypass 三種登入方式。停用帳號功能 Phase 2 加上。
+        </p>
       </div>
     </TherapistLayout>
   );
