@@ -1,8 +1,8 @@
 import { COOKIE_NAME, UNAUTHED_ERR_MSG } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import type { TrpcContext } from "./_core/context";
+import { getSessionCookieOptions } from "./auth/cookies";
+import { systemRouter } from "./system/router";
+import { publicProcedure, router } from "./auth/procedures";
+import type { TrpcContext } from "./auth/context";
 import type { User } from "../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -51,8 +51,8 @@ async function devAuth(ctx: TrpcContext): Promise<User | null> {
   return (await getUserByOpenId(openId)) ?? null;
 }
 
-// 專案層的 protectedProcedure 替代品。不動 _core/trpc.ts 裡的原版,
-// 只在本檔案內取代使用。production 行為等價於原 protectedProcedure。
+// 專案層的 protectedProcedure 替代品。覆寫 auth/procedures.ts 的原版,
+// 加入 status === "disabled" 檢查 + dev-bypass。production 行為等價於原版。
 const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const user = await devAuth(ctx);
   if (!user) {

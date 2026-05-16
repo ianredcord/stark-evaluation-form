@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { notifyOwner } from "./notification";
-import { adminProcedure, publicProcedure, router } from "./trpc";
+import { adminProcedure, publicProcedure, router } from "../auth/procedures";
+import { notifyOwner } from "./notifications";
 
 export const systemRouter = router({
   health: publicProcedure
@@ -22,8 +22,6 @@ export const systemRouter = router({
     )
     .mutation(async ({ input }) => {
       const delivered = await notifyOwner(input);
-      return {
-        success: delivered,
-      } as const;
+      return { success: delivered } as const;
     }),
 });

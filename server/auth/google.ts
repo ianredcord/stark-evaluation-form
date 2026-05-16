@@ -2,8 +2,8 @@ import { Google, generateState, generateCodeVerifier, decodeIdToken } from "arct
 import type { Express, Request, Response } from "express";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import * as db from "../db";
-import { getSessionCookieOptions } from "../_core/cookies";
-import { sdk } from "../_core/sdk";
+import { getSessionCookieOptions } from "./cookies";
+import { createSessionToken } from "./session";
 
 const STATE_COOKIE = "google_oauth_state";
 const VERIFIER_COOKIE = "google_oauth_verifier";
@@ -152,7 +152,7 @@ export function registerGoogleAuthRoutes(app: Express) {
           ...(roleOverride ? { role: roleOverride } : {}),
         });
 
-        const sessionToken = await sdk.createSessionToken(openId, {
+        const sessionToken = await createSessionToken(openId, {
           name: claims.name || "",
           expiresInMs: ONE_YEAR_MS,
         });

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { ENV } from "./env";
+import { ENV } from "../config/env";
 
 export type NotificationPayload = {
   title: string;
@@ -9,14 +9,11 @@ export type NotificationPayload = {
 const TITLE_MAX_LENGTH = 1200;
 const CONTENT_MAX_LENGTH = 20000;
 
-const trimValue = (value: string): string => value.trim();
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 
 const buildEndpointUrl = (baseUrl: string): string => {
-  const normalizedBase = baseUrl.endsWith("/")
-    ? baseUrl
-    : `${baseUrl}/`;
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   return new URL(
     "webdevtoken.v1.WebDevService/SendNotification",
     normalizedBase
@@ -37,8 +34,8 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
     });
   }
 
-  const title = trimValue(input.title);
-  const content = trimValue(input.content);
+  const title = input.title.trim();
+  const content = input.content.trim();
 
   if (title.length > TITLE_MAX_LENGTH) {
     throw new TRPCError({
@@ -57,28 +54,15 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
   return { title, content };
 };
 
-/**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
- */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
-  if (!ENV.forgeApiUrl) {
+  if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
-  }
-
-  if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
+      message: "Notification service is not configured.",
     });
   }
 
