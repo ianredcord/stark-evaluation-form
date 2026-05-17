@@ -17,7 +17,10 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import { defaultMotiRiskValues } from "../../../shared/evaluation";
+import {
+  evaluationRowToFormData,
+  formDataToEvaluationInput,
+} from "@/lib/evaluationMapper";
 
 
 
@@ -65,51 +68,7 @@ function EvaluationFormContent() {
   // 當載入現有評估表時，更新表單資料
   useEffect(() => {
     if (existingEvaluation) {
-      // 將資料庫資料轉換為表單格式
-      loadFormData({
-        basicInfo: {
-          date: existingEvaluation.date || "",
-          name: existingEvaluation.clientName || "",
-          birthday: existingEvaluation.birthday || "",
-          occupation: existingEvaluation.occupation || "",
-          dominantHand: (existingEvaluation.dominantHand as "right" | "left" | "") || "",
-          currentSymptomLocation: existingEvaluation.currentSymptomLocation || "",
-          currentSymptomTrigger: existingEvaluation.currentSymptomTrigger || "",
-          currentSymptomTreatment: existingEvaluation.currentSymptomTreatment || "",
-          pastSymptomLocation: existingEvaluation.pastSymptomLocation || "",
-          pastSymptomTrigger: existingEvaluation.pastSymptomTrigger || "",
-          pastSymptomTreatment: existingEvaluation.pastSymptomTreatment || "",
-          earliestSymptomLocation: existingEvaluation.earliestSymptomLocation || "",
-          earliestSymptomTrigger: existingEvaluation.earliestSymptomTrigger || "",
-          earliestSymptomTreatment: existingEvaluation.earliestSymptomTreatment || "",
-          injuryHistory: existingEvaluation.injuryHistory || "",
-          fractureHistory: existingEvaluation.fractureHistory || "",
-          surgeryHistory: existingEvaluation.surgeryHistory || "",
-          medicalDiagnosis: existingEvaluation.medicalDiagnosis || "",
-          medication: existingEvaluation.medication || "",
-          exerciseHabits: existingEvaluation.exerciseHabits || "",
-          sleepCondition: existingEvaluation.sleepCondition || "",
-          goalsAndExpectations: existingEvaluation.goalsAndExpectations || "",
-        },
-        motiPhysio: {
-          reportPage1: existingEvaluation.motiPhysioPage1 || "",
-          reportPage2: existingEvaluation.motiPhysioPage2 || "",
-        },
-        motiRiskValues: (existingEvaluation.motiRiskValues as any) || defaultMotiRiskValues,
-        functionalMovement: (existingEvaluation.functionalMovement as any) || {},
-        redcord: (existingEvaluation.redcordAssessment as any) || {},
-        ronfic: {
-          miniplusResult: existingEvaluation.ronficMiniplusResult || "",
-          ximResult: existingEvaluation.ronficXimResult || "",
-        },
-        trainingPlan: {
-          plans: (existingEvaluation.trainingPlans as any) || [],
-          notes: existingEvaluation.notes || "",
-          photos: (existingEvaluation.photos as any) || [],
-          clientSignature: existingEvaluation.clientSignature || "",
-          coachSignature: existingEvaluation.coachSignature || "",
-        },
-      });
+      loadFormData(evaluationRowToFormData(existingEvaluation as any));
     }
   }, [existingEvaluation, loadFormData]);
 
@@ -156,60 +115,10 @@ function EvaluationFormContent() {
     goToNextPage();
   };
 
-  // 將表單資料轉換為 API 格式
-  const convertFormDataToApiFormat = () => {
-    return {
-      date: formData.basicInfo.date,
-      clientName: formData.basicInfo.name,
-      birthday: formData.basicInfo.birthday,
-      occupation: formData.basicInfo.occupation,
-      dominantHand: formData.basicInfo.dominantHand,
-      
-      currentSymptomLocation: formData.basicInfo.currentSymptomLocation,
-      currentSymptomTrigger: formData.basicInfo.currentSymptomTrigger,
-      currentSymptomTreatment: formData.basicInfo.currentSymptomTreatment,
-      
-      pastSymptomLocation: formData.basicInfo.pastSymptomLocation,
-      pastSymptomTrigger: formData.basicInfo.pastSymptomTrigger,
-      pastSymptomTreatment: formData.basicInfo.pastSymptomTreatment,
-      
-      earliestSymptomLocation: formData.basicInfo.earliestSymptomLocation,
-      earliestSymptomTrigger: formData.basicInfo.earliestSymptomTrigger,
-      earliestSymptomTreatment: formData.basicInfo.earliestSymptomTreatment,
-      
-      injuryHistory: formData.basicInfo.injuryHistory,
-      fractureHistory: formData.basicInfo.fractureHistory,
-      surgeryHistory: formData.basicInfo.surgeryHistory,
-      medicalDiagnosis: formData.basicInfo.medicalDiagnosis,
-      medication: formData.basicInfo.medication,
-      exerciseHabits: formData.basicInfo.exerciseHabits,
-      sleepCondition: formData.basicInfo.sleepCondition,
-      goalsAndExpectations: formData.basicInfo.goalsAndExpectations,
-      
-      motiPhysioPage1: formData.motiPhysio.reportPage1,
-      motiPhysioPage2: formData.motiPhysio.reportPage2,
-
-      motiRiskValues: formData.motiRiskValues,
-
-      functionalMovement: formData.functionalMovement,
-      redcordAssessment: formData.redcord,
-      
-      ronficMiniplusResult: formData.ronfic.miniplusResult,
-      ronficXimResult: formData.ronfic.ximResult,
-      
-      trainingPlans: formData.trainingPlan.plans,
-      notes: formData.trainingPlan.notes,
-      photos: formData.trainingPlan.photos,
-      
-      clientSignature: formData.trainingPlan.clientSignature,
-      coachSignature: formData.trainingPlan.coachSignature,
-    };
-  };
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const apiData = convertFormDataToApiFormat();
+      const apiData = formDataToEvaluationInput(formData);
       
       if (evaluationId) {
         // 更新現有評估表
@@ -253,10 +162,10 @@ function EvaluationFormContent() {
     
     setIsExporting(true);
     toast.info("PDF 生成中，請稍候...");
-    
+
     try {
       // 先儲存最新資料
-      const apiData = convertFormDataToApiFormat();
+      const apiData = formDataToEvaluationInput(formData);
       await updateMutation.mutateAsync({
         id: evaluationId,
         data: apiData,

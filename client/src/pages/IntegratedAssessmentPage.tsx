@@ -90,9 +90,21 @@ const FUNCTIONAL_ICONS: Record<string, React.ReactNode> = {
   左右不對稱: <Activity />,
 };
 
+function parseEvalIdFromSearch(): number | undefined {
+  if (typeof window === "undefined") return undefined;
+  const raw = new URLSearchParams(window.location.search).get("evalId");
+  if (!raw) return undefined;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 export default function IntegratedAssessmentPage() {
   const [, params] = useRoute<{ id: string }>("/clients/:id/assessment");
   const clientId = params?.id ?? demoClient.id;
+  // Temporary dev affordance: ?evalId=N binds the Drawer to a real
+  // evaluation row so we can verify the new tRPC-backed Provider.
+  // PR B will replace this with /clients/:id/assessment/:evalId routing.
+  const evaluationId = parseEvalIdFromSearch();
 
   const [activeTab, setActiveTab] = useState<string>("summary");
   const [judgment, setJudgment] = useState(demoTherapistJudgment);
@@ -521,6 +533,7 @@ export default function IntegratedAssessmentPage() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         initialTab={drawerTab}
+        evaluationId={evaluationId}
       />
 
       <PrescriptionPicker
