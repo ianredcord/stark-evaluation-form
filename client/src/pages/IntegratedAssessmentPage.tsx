@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useRoute } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { useRoute, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useAutosave } from "@/lib/useAutosave";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
@@ -90,21 +90,25 @@ const FUNCTIONAL_ICONS: Record<string, React.ReactNode> = {
   左右不對稱: <Activity />,
 };
 
-function parseEvalIdFromSearch(): number | undefined {
-  if (typeof window === "undefined") return undefined;
-  const raw = new URLSearchParams(window.location.search).get("evalId");
-  if (!raw) return undefined;
-  const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
-}
-
 export default function IntegratedAssessmentPage() {
-  const [, params] = useRoute<{ id: string }>("/clients/:id/assessment");
+  const [, params] = useRoute<{ id: string; evalId: string }>(
+    "/clients/:id/assessment/:evalId"
+  );
+  const [, setLocation] = useLocation();
   const clientId = params?.id ?? demoClient.id;
-  // Temporary dev affordance: ?evalId=N binds the Drawer to a real
-  // evaluation row so we can verify the new tRPC-backed Provider.
-  // PR B will replace this with /clients/:id/assessment/:evalId routing.
-  const evaluationId = parseEvalIdFromSearch();
+  const parsedEvalId = params?.evalId ? Number(params.evalId) : NaN;
+  const evaluationId =
+    Number.isFinite(parsedEvalId) && parsedEvalId > 0
+      ? parsedEvalId
+      : undefined;
+
+  // Invalid / missing evalId in the URL — bounce back to the client page.
+  // Wrap in effect so we don't navigate during render.
+  useEffect(() => {
+    if (params && !evaluationId) {
+      setLocation(`/clients/${clientId}`);
+    }
+  }, [params, evaluationId, clientId, setLocation]);
 
   const [activeTab, setActiveTab] = useState<string>("summary");
   const [judgment, setJudgment] = useState(demoTherapistJudgment);

@@ -29,7 +29,7 @@ function Router() {
       <Route path="/templates" component={Templates} />
       <Route path="/template/:id/edit" component={TemplateEdit} />
       <Route path="/components" component={ComponentShowcase} />
-      <Route path="/clients/:id/assessment" component={IntegratedAssessmentPage} />
+      <Route path="/clients/:id/assessment/:evalId" component={IntegratedAssessmentPage} />
       <Route path="/clients/:id" component={ClientDetailPage} />
       <Route path="/auth/login" component={Login} />
       <Route path="/admin/users" component={AdminUsers} />
