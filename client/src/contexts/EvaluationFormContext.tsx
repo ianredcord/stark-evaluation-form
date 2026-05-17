@@ -82,6 +82,7 @@ export function EvaluationFormProvider({
   const totalPages = 7;
 
   // ===== tRPC integration (only when evaluationId is set) =====
+  const utils = trpc.useUtils();
   const evalQuery = trpc.evaluation.get.useQuery(
     { id: evaluationId ?? 0 },
     { enabled: !!evaluationId, refetchOnWindowFocus: false }
@@ -126,7 +127,14 @@ export function EvaluationFormProvider({
         },
         {
           onSuccess: result => {
-            if (result.success) setLastSavedAt(new Date());
+            if (result.success) {
+              setLastSavedAt(new Date());
+              // Other consumers (main IntegratedAssessmentPage, future
+              // client report) read evaluation.get / list — invalidate so
+              // they reflect the latest fields after autosave.
+              utils.evaluation.get.invalidate({ id: evaluationId });
+              utils.evaluation.list.invalidate();
+            }
           },
         }
       );

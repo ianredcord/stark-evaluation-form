@@ -1,19 +1,18 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { ScoreRing } from "@/components/atoms/ScoreRing";
 import { ScoreHistoryChart } from "@/components/organisms/ScoreHistoryChart";
-import {
-  demoClientList,
-  demoEvaluationHistory,
-} from "@/lib/demo-data";
+import { demoClientList, demoEvaluationHistory } from "@/lib/demo-data";
+import { trpc } from "@/lib/trpc";
 import {
   ArrowLeft,
   ArrowRight,
   Calendar,
   ClipboardList,
+  Loader2,
   Plus,
   TrendingUp,
   TrendingDown,
@@ -23,15 +22,39 @@ import {
 export default function ClientDetailPage() {
   const [, params] = useRoute<{ id: string }>("/clients/:id");
   const clientId = params?.id ?? "demo-001";
-  const client = demoClientList.find((c) => c.id === clientId);
-  const history = demoEvaluationHistory[clientId] ?? [];
+  const [, setLocation] = useLocation();
+
+  // Client identity still comes from demo data — real client CRUD lands in
+  // PR C. The evaluation list, however, comes from tRPC.
+  const client = demoClientList.find(c => c.id === clientId);
+
+  const evalListQuery = trpc.evaluation.list.useQuery();
+  const createMutation = trpc.evaluation.create.useMutation();
+
+  // Score history is still demo until PR D wires structured scores end to
+  // end. The historyDemo lookup keeps the existing trend chart alive.
+  const historyDemo = demoEvaluationHistory[clientId] ?? [];
+
+  const handleStartNewEvaluation = async () => {
+    try {
+      const result = await createMutation.mutateAsync({});
+      if (result.id) {
+        setLocation(`/clients/${clientId}/assessment/${result.id}`);
+      } else {
+        toast.error("無法建立新評估");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("建立評估失敗");
+    }
+  };
 
   if (!client) {
     return (
       <TherapistLayout activeKey="clients">
         <div className="p-6">
           <p className="text-muted-foreground">找不到此客戶</p>
-          <Link href="/">
+          <Link href="/clients">
             <a className="text-brand-primary text-sm underline">返回客戶列表</a>
           </Link>
         </div>
@@ -39,17 +62,20 @@ export default function ClientDetailPage() {
     );
   }
 
-  const latest = history[0];
-  const previous = history[1];
-  const delta = latest && previous ? latest.overallScore - previous.overallScore : 0;
-  const points = [...history]
+  const latest = historyDemo[0];
+  const previous = historyDemo[1];
+  const delta =
+    latest && previous ? latest.overallScore - previous.overallScore : 0;
+  const points = [...historyDemo]
     .reverse()
-    .map((h) => ({ date: h.date.slice(5), value: h.overallScore }));
+    .map(h => ({ date: h.date.slice(5), value: h.overallScore }));
+
+  const realEvaluations = evalListQuery.data ?? [];
 
   return (
     <TherapistLayout activeKey="clients">
       <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-5">
-        <Link href="/">
+        <Link href="/clients">
           <a className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" />
             返回客戶列表
@@ -64,7 +90,9 @@ export default function ClientDetailPage() {
             </span>
             <div>
               <div className="flex items-baseline gap-2 flex-wrap">
-                <h1 className="font-display text-2xl font-bold">{client.name}</h1>
+                <h1 className="font-display text-2xl font-bold">
+                  {client.name}
+                </h1>
                 <span className="text-sm text-muted-foreground">
                   {client.age} 歲 · {client.gender}
                 </span>
@@ -97,17 +125,25 @@ export default function ClientDetailPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <Link href={`/clients/${client.id}/assessment`}>
-              <a>
-                <Button className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white w-full">
-                  <Plus className="w-4 h-4" />
-                  開始新評估
-                </Button>
-              </a>
-            </Link>
+            <Button
+              onClick={handleStartNewEvaluation}
+              disabled={createMutation.isPending}
+              className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white w-full"
+            >
+              {createMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              開始新評估
+            </Button>
             <Button
               variant="outline"
-              onClick={() => toast.info("複評排程", { description: "Phase 2 接行事曆 API" })}
+              onClick={() =>
+                toast.info("複評排程", {
+                  description: "Phase 2 接行事曆 API",
+                })
+              }
               className="gap-1.5"
             >
               <Calendar className="w-4 h-4" />
@@ -116,7 +152,7 @@ export default function ClientDetailPage() {
           </div>
         </header>
 
-        {/* Summary row */}
+        {/* Summary row (still demo data) */}
         {latest && (
           <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 items-center rounded-xl border bg-card p-5">
             <ScoreRing
@@ -135,7 +171,9 @@ export default function ClientDetailPage() {
               <h2 className="font-display text-lg font-semibold">
                 最近一次評估摘要
               </h2>
-              <p className="text-sm text-muted-foreground">{latest.topConcern}</p>
+              <p className="text-sm text-muted-foreground">
+                {latest.topConcern}
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                 <SubScore label="姿勢結構" value={latest.postureScore} />
                 <SubScore label="動作功能" value={latest.movementScore} />
@@ -147,14 +185,14 @@ export default function ClientDetailPage() {
               <p className="text-xs text-muted-foreground">與上次相比</p>
               <TrendBadge delta={delta} />
               <p className="text-xs text-muted-foreground">
-                共 {history.length} 次評估
+                共 {historyDemo.length} 次評估
               </p>
             </div>
           </div>
         )}
 
-        {/* Trend chart */}
-        {history.length > 1 && (
+        {/* Trend chart (still demo) */}
+        {historyDemo.length > 1 && (
           <section className="rounded-xl border bg-card p-5">
             <h2 className="font-display text-lg font-semibold mb-3">
               整體分數趨勢
@@ -163,58 +201,98 @@ export default function ClientDetailPage() {
           </section>
         )}
 
-        {/* History list */}
+        {/* Real evaluations list (from tRPC) */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">歷次評估</h2>
-            <Link href={`/clients/${client.id}/assessment`}>
-              <a className="text-xs text-brand-primary hover:text-brand-primary-dark inline-flex items-center gap-1">
-                新增評估
-                <ArrowRight className="w-3 h-3" />
-              </a>
-            </Link>
+            <button
+              onClick={handleStartNewEvaluation}
+              disabled={createMutation.isPending}
+              className="text-xs text-brand-primary hover:text-brand-primary-dark inline-flex items-center gap-1 disabled:opacity-50"
+            >
+              新增評估
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
-          <div className="space-y-2">
-            {history.map((h, i) => (
-              <div
-                key={h.id}
-                className="rounded-lg border bg-card p-4 flex items-center gap-3"
-              >
-                <span className="inline-flex w-10 h-10 items-center justify-center rounded-full bg-bg-subtle text-foreground shrink-0">
-                  <ClipboardList className="w-4 h-4" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <p className="font-display font-semibold text-sm">
-                      {h.date}
-                    </p>
-                    {i === 0 && (
-                      <StatusPill status="good" size="sm">最新</StatusPill>
-                    )}
-                    {i === history.length - 1 && (
-                      <StatusPill status="neutral" size="sm">初評</StatusPill>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {h.topConcern}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">分數</p>
-                    <p className="font-display text-lg font-bold tabular-nums text-brand-primary">
-                      {h.overallScore}
-                    </p>
-                  </div>
-                  <Link href={i === 0 ? `/clients/${client.id}/assessment` : `/clients/${client.id}/assessment/${h.id}`}>
-                    <a className="p-2 rounded-md hover:bg-muted">
-                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                    </a>
-                  </Link>
-                </div>
+
+          {evalListQuery.isLoading ? (
+            <div className="rounded-lg border bg-card p-8 flex items-center justify-center text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin mr-2" /> 載入中…
+            </div>
+          ) : realEvaluations.length === 0 ? (
+            <div className="rounded-lg border border-dashed bg-card p-8 text-center space-y-3">
+              <ClipboardList className="w-8 h-8 mx-auto text-muted-foreground" />
+              <div>
+                <p className="font-medium">還沒有評估資料</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  點「開始新評估」建立第一份評估表
+                </p>
               </div>
-            ))}
-          </div>
+              <Button
+                onClick={handleStartNewEvaluation}
+                disabled={createMutation.isPending}
+                className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
+              >
+                {createMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                開始新評估
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {realEvaluations.map((evalRow, i) => {
+                const displayDate =
+                  evalRow.date ||
+                  (evalRow.createdAt
+                    ? new Date(evalRow.createdAt).toISOString().slice(0, 10)
+                    : "—");
+                const displayName = evalRow.clientName || "未命名";
+                return (
+                  <div
+                    key={evalRow.id}
+                    className="rounded-lg border bg-card p-4 flex items-center gap-3"
+                  >
+                    <span className="inline-flex w-10 h-10 items-center justify-center rounded-full bg-bg-subtle text-foreground shrink-0">
+                      <ClipboardList className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <p className="font-display font-semibold text-sm">
+                          {displayDate}
+                        </p>
+                        {i === 0 && (
+                          <StatusPill status="good" size="sm">
+                            最新
+                          </StatusPill>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {displayName}
+                        {evalRow.chiefComplaint
+                          ? ` · ${evalRow.chiefComplaint}`
+                          : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        #{evalRow.id}
+                      </span>
+                      <Link
+                        href={`/clients/${clientId}/assessment/${evalRow.id}`}
+                      >
+                        <a className="p-2 rounded-md hover:bg-muted">
+                          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                        </a>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
     </TherapistLayout>
@@ -240,8 +318,7 @@ function TrendBadge({ delta }: { delta: number }) {
   if (delta > 0)
     return (
       <span className="inline-flex items-center gap-1 text-sm font-semibold text-status-good">
-        <TrendingUp className="w-4 h-4" />
-        +{delta} 分
+        <TrendingUp className="w-4 h-4" />+{delta} 分
       </span>
     );
   return (
