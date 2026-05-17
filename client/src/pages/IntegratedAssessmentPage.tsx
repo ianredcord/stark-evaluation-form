@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useRoute, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -121,13 +121,40 @@ export default function IntegratedAssessmentPage() {
       ? parsedEvalId
       : undefined;
 
-  // Real client identity for the sidebar / header. Other organisms in this
-  // page still consume demo data and get refreshed in PR D.
+  // Real client identity for the sidebar / header.
   const clientQuery = trpc.clients.get.useQuery(
     { id: clientId ?? 0 },
     { enabled: clientId != null }
   );
   const realClient = clientQuery.data;
+
+  // Real evaluation row — main page hydrates its editable state from here
+  // on first load, then writes changes back via autosave.
+  const evalQuery = trpc.evaluation.get.useQuery(
+    { id: evaluationId ?? 0 },
+    { enabled: !!evaluationId, refetchOnWindowFocus: false }
+  );
+  const evalRow = evalQuery.data;
+  const utils = trpc.useUtils();
+  const updateMutation = trpc.evaluation.update.useMutation();
+
+  // Read-only complaint section: prefer eval row fields, fall back to demo.
+  const complaintRows = useMemo(() => {
+    if (!evalRow) return null;
+    const row = evalRow as any;
+    return {
+      symptomAreas:
+        row.currentSymptomLocation || demoComplaint.symptomAreas,
+      triggerActions:
+        row.currentSymptomTrigger || demoComplaint.triggerActions,
+      injuryHistory: row.injuryHistory || demoComplaint.injuryHistory,
+      surgeryHistory: row.surgeryHistory || demoComplaint.surgeryHistory,
+      medicalDiagnosis:
+        row.medicalDiagnosis || demoComplaint.medicalDiagnosis,
+      sleepStatus: row.sleepCondition || demoComplaint.sleepStatus,
+      goals: row.goalsAndExpectations || demoComplaint.goals,
+    };
+  }, [evalRow]);
 
   // Invalid / missing evalId in the URL — bounce back to the client page.
   // Wrap in effect so we don't navigate during render.
@@ -148,6 +175,31 @@ export default function IntegratedAssessmentPage() {
     demoReportSummary.plainExplanation
   );
   const [reportNotes, setReportNotes] = useState(demoReportSummary.notes);
+
+  // Hydrate from server eval row once. Subsequent autosaves push back to
+  // the server, so we don't re-hydrate on every refetch (that would clobber
+  // mid-edit local state).
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!evalRow || hydratedRef.current) return;
+    if ((evalRow as any).topThreeIssues)
+      setTopIssues((evalRow as any).topThreeIssues);
+    if ((evalRow as any).interventionTypes)
+      setInterventions((evalRow as any).interventionTypes);
+    if (typeof evalRow.interventionNotes === "string" && evalRow.interventionNotes)
+      setInterventionNotes(evalRow.interventionNotes);
+    if (typeof evalRow.plainExplanation === "string" && evalRow.plainExplanation)
+      setPlainExplanation(evalRow.plainExplanation);
+    // reportNotes maps to the legacy `notes` column (training notes) only
+    // when no client-facing explanation has been written. Leave as demo
+    // default for now.
+    hydratedRef.current = true;
+  }, [evalRow]);
+
+  // Reset hydration when evaluationId changes.
+  useEffect(() => {
+    hydratedRef.current = false;
+  }, [evaluationId]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTabKey>("basic");
   const [prescriptionPickerOpen, setPrescriptionPickerOpen] = useState(false);
@@ -203,8 +255,21 @@ export default function IntegratedAssessmentPage() {
   const { status: autosaveStatus, lastSavedAt } = useAutosave(
     formSnapshot,
     async () => {
-      // Stub: Week 4 connects to tRPC mutation. For now just simulate latency.
-      await new Promise((r) => setTimeout(r, 400));
+      // Only persist after hydration completes and we have a real eval row.
+      if (!evaluationId || !hydratedRef.current) return;
+      await updateMutation.mutateAsync({
+        id: evaluationId,
+        data: {
+          topThreeIssues: topIssues,
+          interventionTypes: interventions,
+          interventionNotes,
+          plainExplanation,
+        },
+      });
+      // Other consumers (Drawer Provider, ClientDetail eval list) re-read
+      // after each save.
+      utils.evaluation.get.invalidate({ id: evaluationId });
+      utils.evaluation.listByClient.invalidate();
     },
     { delayMs: 1500 }
   );
@@ -267,7 +332,7 @@ export default function IntegratedAssessmentPage() {
                         {r.label}
                       </dt>
                       <dd className="text-sm text-foreground">
-                        {demoComplaint[r.key]}
+                        {(complaintRows ?? demoComplaint)[r.key]}
                       </dd>
                     </div>
                   ))}
