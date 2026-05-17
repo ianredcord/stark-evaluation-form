@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { useRoute, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useAutosave } from "@/lib/useAutosave";
@@ -90,23 +91,49 @@ const FUNCTIONAL_ICONS: Record<string, React.ReactNode> = {
   左右不對稱: <Activity />,
 };
 
+function ageFromBirthdate(birthdate: string | null | undefined): number | null {
+  if (!birthdate) return null;
+  const d = new Date(birthdate);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < d.getMonth() ||
+    (now.getMonth() === d.getMonth() && now.getDate() < d.getDate());
+  if (beforeBirthday) age -= 1;
+  return age >= 0 ? age : null;
+}
+
 export default function IntegratedAssessmentPage() {
   const [, params] = useRoute<{ id: string; evalId: string }>(
     "/clients/:id/assessment/:evalId"
   );
   const [, setLocation] = useLocation();
-  const clientId = params?.id ?? demoClient.id;
+  const rawClientId = params?.id ?? "";
+  const parsedClientId = Number(rawClientId);
+  const clientId =
+    Number.isFinite(parsedClientId) && parsedClientId > 0
+      ? parsedClientId
+      : null;
   const parsedEvalId = params?.evalId ? Number(params.evalId) : NaN;
   const evaluationId =
     Number.isFinite(parsedEvalId) && parsedEvalId > 0
       ? parsedEvalId
       : undefined;
 
+  // Real client identity for the sidebar / header. Other organisms in this
+  // page still consume demo data and get refreshed in PR D.
+  const clientQuery = trpc.clients.get.useQuery(
+    { id: clientId ?? 0 },
+    { enabled: clientId != null }
+  );
+  const realClient = clientQuery.data;
+
   // Invalid / missing evalId in the URL — bounce back to the client page.
   // Wrap in effect so we don't navigate during render.
   useEffect(() => {
-    if (params && !evaluationId) {
-      setLocation(`/clients/${clientId}`);
+    if (params && (!evaluationId || clientId == null)) {
+      setLocation(clientId != null ? `/clients/${clientId}` : "/clients");
     }
   }, [params, evaluationId, clientId, setLocation]);
 
@@ -204,8 +231,19 @@ export default function IntegratedAssessmentPage() {
       <div className="flex flex-col xl:flex-row">
         <div className="hidden lg:block">
         <ClientSidebar
-          client={demoClient}
-          complaint={`久坐後下背與頸部痠痛,深蹲時右膝不適。`}
+          client={
+            realClient
+              ? {
+                  initial: realClient.name.trim()[0] ?? "?",
+                  name: realClient.name,
+                  age: ageFromBirthdate(realClient.birthdate) ?? demoClient.age,
+                  gender: realClient.gender ?? demoClient.gender,
+                  height: realClient.height ?? demoClient.height,
+                  weight: realClient.weight ?? demoClient.weight,
+                }
+              : demoClient
+          }
+          complaint={realClient?.primaryConcern || `久坐後下背與頸部痠痛,深蹲時右膝不適。`}
           goals="改善痠痛並增進運動與穩定度。"
           progress={demoEvaluationProgress}
         />
@@ -550,7 +588,7 @@ export default function IntegratedAssessmentPage() {
       <GenerateReportDialog
         open={generateReportOpen}
         onOpenChange={setGenerateReportOpen}
-        clientName={demoClient.name}
+        clientName={realClient?.name ?? demoClient.name}
         evaluationDate="2026/05/13"
         scoreSummary={`${demoReportSummary.riskLevel.score} / 100 · ${demoReportSummary.riskLevel.label}`}
         topIssuesCount={topIssues.length}

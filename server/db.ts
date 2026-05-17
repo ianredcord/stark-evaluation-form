@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate } from "../drizzle/schema";
+import { InsertUser, users, evaluations, InsertEvaluation, Evaluation, evaluationTemplates, InsertEvaluationTemplate, EvaluationTemplate, clients, InsertClient, Client } from "../drizzle/schema";
+import { and } from "drizzle-orm";
 import { ENV } from './config/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -130,6 +131,32 @@ export async function getEvaluationById(id: number): Promise<Evaluation | null> 
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error("[Database] Failed to get evaluation:", error);
+    throw error;
+  }
+}
+
+/**
+ * 取得某 client 的評估表（限該使用者擁有）.
+ * Returns [] when DB unavailable.
+ */
+export async function getEvaluationsByClientId(
+  clientId: number,
+  userId: number
+): Promise<Evaluation[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .select()
+      .from(evaluations)
+      .where(
+        and(eq(evaluations.clientId, clientId), eq(evaluations.userId, userId))
+      )
+      .orderBy(desc(evaluations.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get evaluations by client:", error);
     throw error;
   }
 }
@@ -343,6 +370,67 @@ export async function deleteTemplate(id: number): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("[Database] Failed to delete template:", error);
+    throw error;
+  }
+}
+
+// ============ Client CRUD 函數 ============
+
+/**
+ * 建立新 client. Returns insertId or null when DB unavailable.
+ */
+export async function createClient(data: InsertClient): Promise<number | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db.insert(clients).values(data);
+    return result[0].insertId;
+  } catch (error) {
+    console.error("[Database] Failed to create client:", error);
+    throw error;
+  }
+}
+
+/**
+ * 根據 id 取得 client（限該使用者擁有）.
+ */
+export async function getClientById(
+  id: number,
+  userId: number
+): Promise<Client | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(clients)
+      .where(and(eq(clients.id, id), eq(clients.userId, userId)))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get client:", error);
+    throw error;
+  }
+}
+
+/**
+ * 取得使用者的所有 clients，依建立時間由新至舊.
+ */
+export async function getClientsByUserId(userId: number): Promise<Client[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.userId, userId))
+      .orderBy(desc(clients.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get clients:", error);
     throw error;
   }
 }

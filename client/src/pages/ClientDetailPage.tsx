@@ -3,9 +3,6 @@ import { toast } from "sonner";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
-import { ScoreRing } from "@/components/atoms/ScoreRing";
-import { ScoreHistoryChart } from "@/components/organisms/ScoreHistoryChart";
-import { demoClientList, demoEvaluationHistory } from "@/lib/demo-data";
 import { trpc } from "@/lib/trpc";
 import {
   ArrowLeft,
@@ -14,30 +11,69 @@ import {
   ClipboardList,
   Loader2,
   Plus,
-  TrendingUp,
-  TrendingDown,
   ExternalLink,
 } from "lucide-react";
+import type { Client } from "../../../drizzle/schema";
+
+function initialFor(name: string) {
+  return name.trim()[0] ?? "?";
+}
+
+function ageFromBirthdate(birthdate: string | null | undefined): number | null {
+  if (!birthdate) return null;
+  const d = new Date(birthdate);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < d.getMonth() ||
+    (now.getMonth() === d.getMonth() && now.getDate() < d.getDate());
+  if (beforeBirthday) age -= 1;
+  return age >= 0 ? age : null;
+}
+
+const STATUS_LABEL: Record<Client["status"], string> = {
+  active: "進行中",
+  pending: "待安排",
+  completed: "已結案",
+};
+
+const STATUS_TONE: Record<Client["status"], "good" | "warn" | "neutral"> = {
+  active: "good",
+  pending: "warn",
+  completed: "neutral",
+};
 
 export default function ClientDetailPage() {
   const [, params] = useRoute<{ id: string }>("/clients/:id");
-  const clientId = params?.id ?? "demo-001";
+  const rawId = params?.id ?? "";
+  const parsedId = Number(rawId);
+  const clientId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
   const [, setLocation] = useLocation();
 
-  // Client identity still comes from demo data — real client CRUD lands in
-  // PR C. The evaluation list, however, comes from tRPC.
-  const client = demoClientList.find(c => c.id === clientId);
+  const clientQuery = trpc.clients.get.useQuery(
+    { id: clientId ?? 0 },
+    { enabled: clientId != null }
+  );
+  const evalListQuery = trpc.evaluation.listByClient.useQuery(
+    { clientId: clientId ?? 0 },
+    { enabled: clientId != null }
+  );
+  const utils = trpc.useUtils();
+  const createMutation = trpc.evaluation.create.useMutation({
+    onSuccess: () => {
+      if (clientId != null)
+        utils.evaluation.listByClient.invalidate({ clientId });
+    },
+  });
 
-  const evalListQuery = trpc.evaluation.list.useQuery();
-  const createMutation = trpc.evaluation.create.useMutation();
-
-  // Score history is still demo until PR D wires structured scores end to
-  // end. The historyDemo lookup keeps the existing trend chart alive.
-  const historyDemo = demoEvaluationHistory[clientId] ?? [];
+  const client = clientQuery.data ?? null;
+  const evaluations = evalListQuery.data ?? [];
 
   const handleStartNewEvaluation = async () => {
+    if (clientId == null) return;
     try {
-      const result = await createMutation.mutateAsync({});
+      const result = await createMutation.mutateAsync({ clientId });
       if (result.id) {
         setLocation(`/clients/${clientId}/assessment/${result.id}`);
       } else {
@@ -49,10 +85,33 @@ export default function ClientDetailPage() {
     }
   };
 
+  if (clientId == null) {
+    return (
+      <TherapistLayout activeKey="clients">
+        <div className="p-6 space-y-2">
+          <p className="text-muted-foreground">無效的客戶 ID</p>
+          <Link href="/clients">
+            <a className="text-brand-primary text-sm underline">返回客戶列表</a>
+          </Link>
+        </div>
+      </TherapistLayout>
+    );
+  }
+
+  if (clientQuery.isLoading) {
+    return (
+      <TherapistLayout activeKey="clients">
+        <div className="p-12 flex items-center justify-center text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" /> 載入中…
+        </div>
+      </TherapistLayout>
+    );
+  }
+
   if (!client) {
     return (
       <TherapistLayout activeKey="clients">
-        <div className="p-6">
+        <div className="p-6 space-y-2">
           <p className="text-muted-foreground">找不到此客戶</p>
           <Link href="/clients">
             <a className="text-brand-primary text-sm underline">返回客戶列表</a>
@@ -62,15 +121,7 @@ export default function ClientDetailPage() {
     );
   }
 
-  const latest = historyDemo[0];
-  const previous = historyDemo[1];
-  const delta =
-    latest && previous ? latest.overallScore - previous.overallScore : 0;
-  const points = [...historyDemo]
-    .reverse()
-    .map(h => ({ date: h.date.slice(5), value: h.overallScore }));
-
-  const realEvaluations = evalListQuery.data ?? [];
+  const age = ageFromBirthdate(client.birthdate);
 
   return (
     <TherapistLayout activeKey="clients">
@@ -86,7 +137,7 @@ export default function ClientDetailPage() {
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border bg-card p-5">
           <div className="flex items-center gap-4">
             <span className="inline-flex w-16 h-16 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display text-2xl font-bold">
-              {client.initial}
+              {initialFor(client.name)}
             </span>
             <div>
               <div className="flex items-baseline gap-2 flex-wrap">
@@ -94,31 +145,19 @@ export default function ClientDetailPage() {
                   {client.name}
                 </h1>
                 <span className="text-sm text-muted-foreground">
-                  {client.age} 歲 · {client.gender}
+                  {age != null ? `${age} 歲` : "—"}
+                  {client.gender ? ` · ${client.gender}` : ""}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {client.primaryConcern}
+                {client.primaryConcern || "—"}
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <StatusPill
-                  status={
-                    client.status === "active"
-                      ? "good"
-                      : client.status === "pending"
-                        ? "warn"
-                        : "neutral"
-                  }
-                  size="sm"
-                >
-                  {client.status === "active"
-                    ? "進行中"
-                    : client.status === "pending"
-                      ? "待安排"
-                      : "已結案"}
+                <StatusPill status={STATUS_TONE[client.status]} size="sm">
+                  {STATUS_LABEL[client.status]}
                 </StatusPill>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  ID: {client.id}
+                  ID: #{client.id}
                 </span>
               </div>
             </div>
@@ -152,56 +191,7 @@ export default function ClientDetailPage() {
           </div>
         </header>
 
-        {/* Summary row (still demo data) */}
-        {latest && (
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 items-center rounded-xl border bg-card p-5">
-            <ScoreRing
-              value={latest.overallScore}
-              size="lg"
-              color={
-                latest.overallScore >= 80
-                  ? "good"
-                  : latest.overallScore >= 60
-                    ? "primary"
-                    : "warn"
-              }
-              label={`最近評估 ${latest.date}`}
-            />
-            <div className="space-y-2">
-              <h2 className="font-display text-lg font-semibold">
-                最近一次評估摘要
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {latest.topConcern}
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                <SubScore label="姿勢結構" value={latest.postureScore} />
-                <SubScore label="動作功能" value={latest.movementScore} />
-                <SubScore label="神經肌肉" value={latest.neuroScore} />
-                <SubScore label="體組成" value={latest.bodyScore} />
-              </div>
-            </div>
-            <div className="space-y-1.5 sm:text-right">
-              <p className="text-xs text-muted-foreground">與上次相比</p>
-              <TrendBadge delta={delta} />
-              <p className="text-xs text-muted-foreground">
-                共 {historyDemo.length} 次評估
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Trend chart (still demo) */}
-        {historyDemo.length > 1 && (
-          <section className="rounded-xl border bg-card p-5">
-            <h2 className="font-display text-lg font-semibold mb-3">
-              整體分數趨勢
-            </h2>
-            <ScoreHistoryChart points={points} color="primary" />
-          </section>
-        )}
-
-        {/* Real evaluations list (from tRPC) */}
+        {/* Real evaluations list */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">歷次評估</h2>
@@ -219,7 +209,7 @@ export default function ClientDetailPage() {
             <div className="rounded-lg border bg-card p-8 flex items-center justify-center text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin mr-2" /> 載入中…
             </div>
-          ) : realEvaluations.length === 0 ? (
+          ) : evaluations.length === 0 ? (
             <div className="rounded-lg border border-dashed bg-card p-8 text-center space-y-3">
               <ClipboardList className="w-8 h-8 mx-auto text-muted-foreground" />
               <div>
@@ -243,13 +233,12 @@ export default function ClientDetailPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {realEvaluations.map((evalRow, i) => {
+              {evaluations.map((evalRow, i) => {
                 const displayDate =
                   evalRow.date ||
                   (evalRow.createdAt
                     ? new Date(evalRow.createdAt).toISOString().slice(0, 10)
                     : "—");
-                const displayName = evalRow.clientName || "未命名";
                 return (
                   <div
                     key={evalRow.id}
@@ -269,12 +258,11 @@ export default function ClientDetailPage() {
                           </StatusPill>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {displayName}
-                        {evalRow.chiefComplaint
-                          ? ` · ${evalRow.chiefComplaint}`
-                          : ""}
-                      </p>
+                      {evalRow.chiefComplaint && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          {evalRow.chiefComplaint}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-xs text-muted-foreground tabular-nums">
@@ -296,35 +284,5 @@ export default function ClientDetailPage() {
         </section>
       </div>
     </TherapistLayout>
-  );
-}
-
-function SubScore({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-display text-lg font-bold tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function TrendBadge({ delta }: { delta: number }) {
-  if (delta === 0)
-    return (
-      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-        持平
-      </span>
-    );
-  if (delta > 0)
-    return (
-      <span className="inline-flex items-center gap-1 text-sm font-semibold text-status-good">
-        <TrendingUp className="w-4 h-4" />+{delta} 分
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center gap-1 text-sm font-semibold text-status-danger">
-      <TrendingDown className="w-4 h-4" />
-      {delta} 分
-    </span>
   );
 }
