@@ -10,6 +10,7 @@ import {
   createEvaluation,
   getEvaluationById,
   getEvaluationsByUserId,
+  getEvaluationsByClientId,
   updateEvaluation,
   deleteEvaluation,
   createTemplate,
@@ -22,6 +23,9 @@ import {
   listAllUsers,
   updateUserRole,
   updateUserStatus,
+  createClient,
+  getClientById,
+  getClientsByUserId,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -272,6 +276,13 @@ export const appRouter = router({
       return getEvaluationsByUserId(ctx.user.id);
     }),
 
+    // 取得某 client 的所有評估表
+    listByClient: protectedProcedure
+      .input(z.object({ clientId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getEvaluationsByClientId(input.clientId, ctx.user.id);
+      }),
+
     // 更新評估表
     update: protectedProcedure
       .input(z.object({
@@ -301,6 +312,49 @@ export const appRouter = router({
         
         const success = await deleteEvaluation(input.id);
         return { success };
+      }),
+  }),
+
+  // Client CRUD API. Note: top-level key MUST NOT be `client` — that
+  // collides with tRPC's internal `AnyRouter['client']` method and
+  // breaks the typed proxy on the frontend.
+  clients: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return getClientsByUserId(ctx.user.id);
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getClientById(input.id, ctx.user.id);
+      }),
+
+    create: protectedProcedure
+      .input(
+        z.object({
+          name: z.string().min(1, "name is required").max(100),
+          birthdate: z.string().optional(),
+          gender: z.string().max(16).optional(),
+          height: z.number().int().nullable().optional(),
+          weight: z.number().int().nullable().optional(),
+          phone: z.string().max(32).optional(),
+          primaryConcern: z.string().optional(),
+          status: z.enum(["active", "pending", "completed"]).optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const id = await createClient({
+          userId: ctx.user.id,
+          name: input.name,
+          birthdate: input.birthdate || null,
+          gender: input.gender || null,
+          height: input.height ?? null,
+          weight: input.weight ?? null,
+          phone: input.phone || null,
+          primaryConcern: input.primaryConcern || null,
+          status: input.status ?? "active",
+        });
+        return { id };
       }),
   }),
 

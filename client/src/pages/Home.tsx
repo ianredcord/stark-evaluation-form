@@ -1,38 +1,49 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
 import { NewClientDialog } from "@/components/organisms/NewClientDialog";
 import { TherapistLayout } from "@/components/templates/TherapistLayout";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { ChipToggle } from "@/components/atoms/ChipToggle";
 import { cn } from "@/lib/utils";
-import { demoClientList, type DemoClientListItem } from "@/lib/demo-data";
-import {
-  UserPlus,
-  Search,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  ArrowRight,
-  Calendar,
-} from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { UserPlus, Search, ArrowRight, Calendar, Loader2 } from "lucide-react";
+import type { Client } from "../../../drizzle/schema";
 
-const STATUS_LABEL: Record<DemoClientListItem["status"], string> = {
+const STATUS_LABEL: Record<Client["status"], string> = {
   active: "進行中",
   pending: "待安排",
   completed: "已結案",
 };
 
-const STATUS_TONE: Record<
-  DemoClientListItem["status"],
-  "good" | "warn" | "neutral"
-> = {
+const STATUS_TONE: Record<Client["status"], "good" | "warn" | "neutral"> = {
   active: "good",
   pending: "warn",
   completed: "neutral",
 };
 
-type StatusFilter = DemoClientListItem["status"] | "all";
+type StatusFilter = Client["status"] | "all";
+
+function initialFor(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  // Prefer the last (CJK family-name-first) or first (Latin) character.
+  return trimmed[0];
+}
+
+function ageFromBirthdate(birthdate: string | null | undefined): number | null {
+  if (!birthdate) return null;
+  const d = new Date(birthdate);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < d.getMonth() ||
+    (now.getMonth() === d.getMonth() && now.getDate() < d.getDate());
+  if (beforeBirthday) age -= 1;
+  return age >= 0 ? age : null;
+}
 
 export default function Home() {
   const [filter, setFilter] = useState<StatusFilter>("all");
@@ -40,22 +51,34 @@ export default function Home() {
   const [newClientOpen, setNewClientOpen] = useState(false);
   const [, navigate] = useLocation();
 
-  const filtered = demoClientList.filter((c) => {
-    if (filter !== "all" && c.status !== filter) return false;
-    const q = query.trim();
-    if (!q) return true;
-    return (
-      c.name.includes(q) ||
-      c.primaryConcern.includes(q) ||
-      c.id.includes(q.toLowerCase())
-    );
+  const clientsQuery = trpc.clients.list.useQuery();
+  const utils = trpc.useUtils();
+  const createMutation = trpc.clients.create.useMutation({
+    onSuccess: () => utils.clients.list.invalidate(),
   });
 
-  const activeCount = demoClientList.filter((c) => c.status === "active").length;
-  const pendingCount = demoClientList.filter((c) => c.status === "pending").length;
-  const avgScore = Math.round(
-    demoClientList.reduce((s, c) => s + c.lastScore, 0) / demoClientList.length
-  );
+  const clients = clientsQuery.data ?? [];
+
+  const counts = useMemo(() => {
+    return {
+      total: clients.length,
+      active: clients.filter(c => c.status === "active").length,
+      pending: clients.filter(c => c.status === "pending").length,
+    };
+  }, [clients]);
+
+  const filtered = useMemo(() => {
+    return clients.filter(c => {
+      if (filter !== "all" && c.status !== filter) return false;
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        c.name.toLowerCase().includes(q) ||
+        (c.primaryConcern ?? "").toLowerCase().includes(q) ||
+        String(c.id).includes(q)
+      );
+    });
+  }, [clients, filter, query]);
 
   return (
     <TherapistLayout activeKey="clients">
@@ -79,29 +102,19 @@ export default function Home() {
         </header>
 
         {/* KPI cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard
-            label="客戶總數"
-            value={demoClientList.length}
-            hint="目前所有檔案"
-          />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <KpiCard label="客戶總數" value={counts.total} hint="目前所有檔案" />
           <KpiCard
             label="進行中"
-            value={activeCount}
+            value={counts.active}
             hint="評估或訓練週期內"
             tone="good"
           />
           <KpiCard
             label="待安排"
-            value={pendingCount}
+            value={counts.pending}
             hint="需要排程下次評估"
             tone="warn"
-          />
-          <KpiCard
-            label="平均分數"
-            value={avgScore}
-            suffix={<span className="text-sm text-muted-foreground">/ 100</span>}
-            hint="近期評估"
           />
         </div>
 
@@ -112,7 +125,7 @@ export default function Home() {
             <input
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value)}
               placeholder="搜尋客戶姓名 / 主訴 / 編號..."
               className="w-full pl-9 pr-3 py-2 rounded-md border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             />
@@ -123,21 +136,21 @@ export default function Home() {
               selected={filter === "all"}
               onToggle={() => setFilter("all")}
             >
-              全部({demoClientList.length})
+              全部({counts.total})
             </ChipToggle>
             <ChipToggle
               size="sm"
               selected={filter === "active"}
               onToggle={() => setFilter("active")}
             >
-              進行中({activeCount})
+              進行中({counts.active})
             </ChipToggle>
             <ChipToggle
               size="sm"
               selected={filter === "pending"}
               onToggle={() => setFilter("pending")}
             >
-              待安排({pendingCount})
+              待安排({counts.pending})
             </ChipToggle>
             <ChipToggle
               size="sm"
@@ -150,63 +163,87 @@ export default function Home() {
         </div>
 
         {/* Client cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((c) => (
-            <Link key={c.id} href={`/clients/${c.id}`}>
-              <a className="rounded-xl border bg-card p-4 hover:shadow-md hover:border-brand-primary/40 transition-all group block">
-                <div className="flex items-start gap-3">
-                  <span className="inline-flex w-12 h-12 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display text-lg font-bold shrink-0">
-                    {c.initial}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <h3 className="font-display font-semibold truncate">
-                        {c.name}
-                      </h3>
-                      <span className="text-xs text-muted-foreground">
-                        {c.age} 歲 · {c.gender}
+        {clientsQuery.isLoading ? (
+          <div className="rounded-xl border bg-card p-12 flex items-center justify-center text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin mr-2" /> 載入中…
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-card p-12 text-center space-y-3">
+            <UserPlus className="w-10 h-10 mx-auto text-muted-foreground" />
+            <div>
+              <p className="font-medium">還沒有客戶</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                點「新增客戶」建立第一份客戶檔案
+              </p>
+            </div>
+            <Button
+              onClick={() => setNewClientOpen(true)}
+              className="gap-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white"
+            >
+              <UserPlus className="w-4 h-4" />
+              新增客戶
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filtered.map(c => {
+              const age = ageFromBirthdate(c.birthdate);
+              return (
+                <Link key={c.id} href={`/clients/${c.id}`}>
+                  <a className="rounded-xl border bg-card p-4 hover:shadow-md hover:border-brand-primary/40 transition-all group block">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex w-12 h-12 items-center justify-center rounded-full bg-client-warm text-brand-primary font-display text-lg font-bold shrink-0">
+                        {initialFor(c.name)}
                       </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <h3 className="font-display font-semibold truncate">
+                            {c.name}
+                          </h3>
+                          <span className="text-xs text-muted-foreground">
+                            {age != null ? `${age} 歲` : "—"}
+                            {c.gender ? ` · ${c.gender}` : ""}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                          {c.primaryConcern || "—"}
+                        </p>
+                      </div>
+                      <StatusPill status={STATUS_TONE[c.status]} size="sm">
+                        {STATUS_LABEL[c.status]}
+                      </StatusPill>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                      {c.primaryConcern}
-                    </p>
-                  </div>
-                  <StatusPill status={STATUS_TONE[c.status]} size="sm">
-                    {STATUS_LABEL[c.status]}
-                  </StatusPill>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t">
-                  <div>
-                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      上次評估
-                    </p>
-                    <p className="font-display text-sm font-medium tabular-nums">
-                      {c.lastEvaluation}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">當前分數</p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-display text-xl font-bold tabular-nums text-brand-primary">
-                        {c.lastScore}
-                      </span>
-                      <TrendBadge delta={c.trend} />
+                    <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t">
+                      <div>
+                        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          建立時間
+                        </p>
+                        <p className="font-display text-sm font-medium tabular-nums">
+                          {new Date(c.createdAt).toISOString().slice(0, 10)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">ID</p>
+                        <p className="font-display text-sm font-medium tabular-nums">
+                          #{c.id}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  進入評估
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </a>
-            </Link>
-          ))}
-        </div>
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      進入評估
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </a>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
-        {filtered.length === 0 && (
+        {clients.length > 0 && filtered.length === 0 && (
           <p className="text-center text-muted-foreground py-12">
             沒有符合條件的客戶
           </p>
@@ -216,12 +253,26 @@ export default function Home() {
       <NewClientDialog
         open={newClientOpen}
         onOpenChange={setNewClientOpen}
-        onCreate={(data) => {
-          // Stub: in real flow, tRPC mutation creates client then we
-          // navigate to /clients/<id>/assessment. For demo we just hop
-          // to chen xiaoyans assessment so the new-eval flow runs.
-          console.log("New client (stub):", data);
-          navigate(`/clients/demo-001/assessment`);
+        onCreate={async data => {
+          try {
+            const result = await createMutation.mutateAsync({
+              name: data.name,
+              birthdate: data.birthdate || undefined,
+              gender: data.gender || undefined,
+              height: data.height || null,
+              weight: data.weight || null,
+              phone: data.phone || undefined,
+              primaryConcern: data.primaryConcern || undefined,
+            });
+            if (result.id) {
+              navigate(`/clients/${result.id}`);
+            } else {
+              toast.error("無法建立客戶");
+            }
+          } catch (error) {
+            console.error(error);
+            toast.error("建立客戶失敗");
+          }
         }}
       />
     </TherapistLayout>
@@ -258,26 +309,5 @@ function KpiCard({
       </p>
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
-  );
-}
-
-function TrendBadge({ delta }: { delta: number }) {
-  if (delta === 0)
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
-        <Minus className="w-3 h-3" />0
-      </span>
-    );
-  if (delta > 0)
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs text-status-good">
-        <TrendingUp className="w-3 h-3" />+{delta}
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center gap-0.5 text-xs text-status-danger">
-      <TrendingDown className="w-3 h-3" />
-      {delta}
-    </span>
   );
 }
