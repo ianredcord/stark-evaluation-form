@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useEvaluationForm, EvaluationFormProvider } from "@/contexts/EvaluationFormContext";
 import { FormNavigation, FormNavigationButtons } from "@/components/FormNavigation";
@@ -17,22 +17,21 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import {
-  evaluationRowToFormData,
-  formDataToEvaluationInput,
-} from "@/lib/evaluationMapper";
+import { formDataToEvaluationInput } from "@/lib/evaluationMapper";
 
 
 
-function EvaluationFormContent() {
-  const params = useParams<{ id?: string }>();
+function EvaluationFormContent({ evaluationId }: { evaluationId: number }) {
   const [, setLocation] = useLocation();
   const { user, loading: authLoading } = useAuth();
-  
+
   const {
     formData,
     currentPage,
     completedPages,
+    isLoading: isLoadingEvaluation,
+    isSaving,
+    lastSavedAt,
     setCurrentPage,
     goToNextPage,
     goToPreviousPage,
@@ -41,9 +40,6 @@ function EvaluationFormContent() {
     loadFormData,
   } = useEvaluationForm();
 
-  const [evaluationId, setEvaluationId] = useState<number | null>(
-    params.id ? parseInt(params.id) : null
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
@@ -51,26 +47,13 @@ function EvaluationFormContent() {
 
   const totalPages = 7;
 
-  // tRPC mutations
-  const createMutation = trpc.evaluation.create.useMutation();
+  // tRPC mutations (immediate save + PDF). Autosave is handled inside the
+  // Provider — this Save button is "save now, don't wait the 5s debounce".
   const updateMutation = trpc.evaluation.update.useMutation();
   const pdfMutation = trpc.pdf.generate.useMutation();
 
   // 範本相關
   const { data: templates } = trpc.template.list.useQuery();
-
-  // 載入現有評估表
-  const { data: existingEvaluation, isLoading: isLoadingEvaluation } = trpc.evaluation.get.useQuery(
-    { id: evaluationId! },
-    { enabled: !!evaluationId }
-  );
-
-  // 當載入現有評估表時，更新表單資料
-  useEffect(() => {
-    if (existingEvaluation) {
-      loadFormData(evaluationRowToFormData(existingEvaluation as any));
-    }
-  }, [existingEvaluation, loadFormData]);
 
   // 檢查登入狀態
   if (authLoading) {
@@ -119,32 +102,15 @@ function EvaluationFormContent() {
     setIsSubmitting(true);
     try {
       const apiData = formDataToEvaluationInput(formData);
-      
-      if (evaluationId) {
-        // 更新現有評估表
-        const result = await updateMutation.mutateAsync({
-          id: evaluationId,
-          data: apiData,
-        });
-        
-        if (result.success) {
-          toast.success("評估表已更新成功！");
-        } else {
-          toast.error(result.error || "更新失敗");
-        }
+      const result = await updateMutation.mutateAsync({
+        id: evaluationId,
+        data: apiData,
+      });
+      if (result.success) {
+        toast.success("評估表已更新成功！");
       } else {
-        // 建立新評估表
-        const result = await createMutation.mutateAsync(apiData);
-        
-        if (result.id) {
-          setEvaluationId(result.id);
-          setLocation(`/evaluation/${result.id}`);
-          toast.success("評估表已建立成功！");
-        } else {
-          toast.error("建立失敗");
-        }
+        toast.error(result.error || "更新失敗");
       }
-      
       markPageCompleted(currentPage);
     } catch (error) {
       toast.error("儲存失敗，請重試");
@@ -155,11 +121,6 @@ function EvaluationFormContent() {
   };
 
   const handleExportPDF = async () => {
-    if (!evaluationId) {
-      toast.error("請先儲存評估表再匯出 PDF");
-      return;
-    }
-    
     setIsExporting(true);
     toast.info("PDF 生成中，請稍候...");
 
@@ -434,10 +395,56 @@ function EvaluationFormContent() {
   );
 }
 
+// Route entry. /evaluation/new triggers a one-shot create + redirect.
+// /evaluation/:id renders the wizard inside a tRPC-bound Provider so loads
+// and autosaves go through evaluation.{get,update} automatically.
 export default function EvaluationForm() {
+  const params = useParams<{ id?: string }>();
+  const [, setLocation] = useLocation();
+  const createMutation = trpc.evaluation.create.useMutation();
+  const [creating, setCreating] = useState(false);
+
+  const rawId = params.id ?? "";
+  const parsedId = Number(rawId);
+  const evaluationId =
+    Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
+
+  // /evaluation/new path: create an empty row then redirect into the
+  // tRPC-bound flow. Guarded by `creating` so React Strict Mode's double
+  // mount in dev doesn't fire two creates.
+  useEffect(() => {
+    if (evaluationId != null || creating) return;
+    if (rawId !== "new") return;
+    setCreating(true);
+    createMutation
+      .mutateAsync({})
+      .then(result => {
+        if (result.id) {
+          setLocation(`/evaluation/${result.id}`);
+        } else {
+          toast.error("無法建立新評估");
+          setCreating(false);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("建立評估失敗");
+        setCreating(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawId, evaluationId]);
+
+  if (evaluationId == null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-stark-orange" />
+      </div>
+    );
+  }
+
   return (
-    <EvaluationFormProvider>
-      <EvaluationFormContent />
+    <EvaluationFormProvider evaluationId={evaluationId}>
+      <EvaluationFormContent evaluationId={evaluationId} />
     </EvaluationFormProvider>
   );
 }
