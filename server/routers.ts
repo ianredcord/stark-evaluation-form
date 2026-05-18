@@ -152,6 +152,8 @@ const evaluationInputSchema = z.object({
   clientGoals: z.string().optional(),
   plainExplanation: z.string().optional(),
   interventionNotes: z.string().optional(),
+  therapistJudgment: z.string().optional(),
+  reportNotes: z.string().optional(),
   topThreeIssues: z.any().optional(),
   recommendedPlan: z.any().optional(),
   interventionTypes: z.any().optional(),

@@ -155,6 +155,10 @@ export const evaluations = mysqlTable("evaluations", {
   shareCodeCreatedAt: timestamp("shareCodeCreatedAt"),
   lastViewedByClient: timestamp("lastViewedByClient"),
 
+  // === Therapist-side rich text on the integrated assessment page ===
+  therapistJudgment: text("therapistJudgment"),
+  reportNotes: text("reportNotes"),
+
   // 時間戳記
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
