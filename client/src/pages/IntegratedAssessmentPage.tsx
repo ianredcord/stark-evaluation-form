@@ -250,9 +250,16 @@ export default function IntegratedAssessmentPage() {
       setInterventionNotes(evalRow.interventionNotes);
     if (typeof evalRow.plainExplanation === "string" && evalRow.plainExplanation)
       setPlainExplanation(evalRow.plainExplanation);
-    // reportNotes maps to the legacy `notes` column (training notes) only
-    // when no client-facing explanation has been written. Leave as demo
-    // default for now.
+    if (
+      typeof (evalRow as any).therapistJudgment === "string" &&
+      (evalRow as any).therapistJudgment
+    )
+      setJudgment((evalRow as any).therapistJudgment);
+    if (
+      typeof (evalRow as any).reportNotes === "string" &&
+      (evalRow as any).reportNotes
+    )
+      setReportNotes((evalRow as any).reportNotes);
     hydratedRef.current = true;
   }, [evalRow]);
 
@@ -324,6 +331,8 @@ export default function IntegratedAssessmentPage() {
           interventionTypes: interventions,
           interventionNotes,
           plainExplanation,
+          therapistJudgment: judgment,
+          reportNotes,
         },
       });
       // Other consumers (Drawer Provider, ClientDetail eval list) re-read
