@@ -20,6 +20,12 @@ import {
   getPrescription,
   type PrescriptionSelection,
 } from "@shared/prescriptionKB";
+import {
+  MOTI_THRESHOLDS,
+  calculateMotiLevel,
+  type MotiRiskItem,
+  type MotiRiskValues,
+} from "../../../shared/evaluation";
 import { BodyOutlineSimple } from "@/components/atoms/BodyOutlineSimple";
 import { ChipToggle } from "@/components/atoms/ChipToggle";
 import { Button } from "@/components/ui/button";
@@ -91,6 +97,43 @@ const FUNCTIONAL_ICONS: Record<string, React.ReactNode> = {
   左右不對稱: <Activity />,
 };
 
+type PostureFinding = {
+  label: string;
+  value: string;
+  tone: "good" | "warn" | "danger";
+};
+
+// Derive top posture findings from the 12-item Moti risk values.
+// Returns null when no values are populated yet (caller falls back to demo).
+function derivePostureFindings(
+  values: MotiRiskValues | null | undefined
+): PostureFinding[] | null {
+  if (!values) return null;
+  const items: PostureFinding[] = [];
+  for (const [key, threshold] of Object.entries(MOTI_THRESHOLDS)) {
+    const item = (values as unknown as Record<string, MotiRiskItem | undefined>)[key];
+    if (!item || item.value == null || Number.isNaN(item.value)) continue;
+    const level =
+      item.level || calculateMotiLevel(item.value, threshold.thresholds);
+    if (!level) continue;
+    const tone: PostureFinding["tone"] =
+      level === "maintain" ? "good" : level === "warn" ? "warn" : "danger";
+    items.push({
+      label: threshold.name,
+      value: `${item.value}${threshold.unit}`,
+      tone,
+    });
+  }
+  if (items.length === 0) return null;
+  const order: Record<PostureFinding["tone"], number> = {
+    danger: 0,
+    warn: 1,
+    good: 2,
+  };
+  items.sort((a, b) => order[a.tone] - order[b.tone]);
+  return items.slice(0, 5);
+}
+
 function ageFromBirthdate(birthdate: string | null | undefined): number | null {
   if (!birthdate) return null;
   const d = new Date(birthdate);
@@ -137,6 +180,23 @@ export default function IntegratedAssessmentPage() {
   const evalRow = evalQuery.data;
   const utils = trpc.useUtils();
   const updateMutation = trpc.evaluation.update.useMutation();
+
+  // Read-only posture findings: derive from eval.motiRiskValues if any
+  // values have been entered yet, otherwise fall back to demo so the
+  // section never renders blank for new evaluations.
+  const postureFindings = useMemo(() => {
+    const derived = derivePostureFindings(
+      (evalRow as any)?.motiRiskValues ?? null
+    );
+    return derived ?? demoPostureFindings;
+  }, [evalRow]);
+
+  // 4-week plan: prefer eval.weekPlan json column when populated.
+  const weekPlanItems = useMemo(() => {
+    const raw = (evalRow as any)?.weekPlan;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return demoWeekPlan;
+  }, [evalRow]);
 
   // Read-only complaint section: prefer eval row fields, fall back to demo.
   const complaintRows = useMemo(() => {
@@ -393,7 +453,7 @@ export default function IntegratedAssessmentPage() {
                     </div>
                   </div>
                   <div className="divide-y border rounded-lg bg-card px-4">
-                    {demoPostureFindings.map((f) => (
+                    {postureFindings.map((f) => (
                       <KeyFindingRow
                         key={f.label}
                         label={f.label}
@@ -549,7 +609,7 @@ export default function IntegratedAssessmentPage() {
                 onEdit={() => openDrawer("training")}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {demoWeekPlan.map((wp, i) => (
+                  {weekPlanItems.map((wp: typeof demoWeekPlan[number], i: number) => (
                     <WeekPlanCard
                       key={wp.n}
                       n={wp.n}
